@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+	<dict>
+		<key>name</key>
+		<string>bajorans</string>
+		<key>ship_image</key>
+		<string>bajorans_ship.png</string>
+		<key>base_image</key>
+		<string>bajorans_base.png</string>
+		<key>info</key>
+		<string>Bajorans are a humanoid extraterrestrial species native to the planet Bajor. Like many aliens on Star Trek, the Bajorans are human-like in appearance, but have a distinctive symmetrical facial feature: ridges on the nose between the eyes. Despite their human-like appearance, there are several biological differences between the two species. During pregnancy, Bajoran women suffer from uncontrollable bouts of sneezing rather than morning sickness. Bajoran women gestate for five months, as opposed to the nine months of human women, due to high vascularization between the fetus and the mother. During childbirth they must be extremely relaxed, and therefore feel little or no pain during the process.</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>klingons</string>
+		<key>ship_image</key>
+		<string>klingons_ship.png</string>
+		<key>base_image</key>
+		<string>klingons_base.png</string>
+		<key>info</key>
+		<string>Klingons are recurring antagonists in the 1960s television series Star Trek: The Original Series, and have appeared in all five spin-off series, along with eight of the feature films. Initially intended to be antagonists for the crew of the USS Enterprise, the Klingons became a close ally of humanity and the United Federation of Planets in Star Trek: The Next Generation.</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>romulans</string>
+		<key>ship_image</key>
+		<string>romulans_ship.png</string>
+		<key>base_image</key>
+		<string>romulans_base.png</string>
+		<key>info</key>
+		<string>The Romulans were a humanoid race from the planet Romulus. The Romulans were biological cousins of Vulcans, as they were descended from those who rejected Surak&apos;s reforms during the Time of Awakening. The Romulan Star Empire was the Romulan state and one of the major powers known in the galaxy. </string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>gorns</string>
+		<key>ship_image</key>
+		<string>gorns_ship.png</string>
+		<key>base_image</key>
+		<string>gorns_base.png</string>
+		<key>info</key>
+		<string>Gorn were a cold-blooded, reptilian species with green, rubbery skin, red blood and an average height of approximately two meters. They tended to be many times stronger than most humanoids, albeit slower and less agile but with greater stamina and, like most cold-blooded species, preferred warmer temperatures. Some Humans had an instinctive revulsion to the Gorn, as they were a type of reptile, and may think them primitive or unintelligent. This is unwise, as the Gorn are at least as intelligent as Humans. </string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>talarians</string>
+		<key>ship_image</key>
+		<string>talarians_ship.png</string>
+		<key>base_image</key>
+		<string>talarians_ship.png</string>
+		<key>info</key>
+		<string>Talarians were characterized by a distinctive hairless enlargement of the coronal area of the skull extending in two lobes to the back of the head. Talarian blood was red, and Talarians were susceptible to radiation burns and respiratory distress.</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>cardassians</string>
+		<key>ship_image</key>
+		<string>cardassians_ship.png</string>
+		<key>base_image</key>
+		<string>cardassians_ship.png</string>
+		<key>info</key>
+		<string>Cardassians are a humanoid race, with light grey skin. Their faces have small ridges on their sides, which converge to a characteristic crest shape on their foreheads, with female Cardassians sporting a blue or blue-green coloration to their crest. This crest has led to the derogatory nickname &quot;spoonheads&quot; used by other races.</string>
+	</dict>
+	<dict>
+		<key>name</key>
+		<string>feregni</string>
+		<key>ship_image</key>
+		<string>feregni_ship.png</string>
+		<key>base_image</key>
+		<string>feregni_base.png</string>
+		<key>info</key>
+		<string>The Ferengi are a humanoid species, somewhat smaller than humans, usually reaching approximately 1.5 m (5 ft) in height. Ferengi have unusually large ears, which are more pronounced in males than in females, giving them an excellent sense of hearing. Due to the size of their ears, they can also sense sudden atmospheric and altitude changes within a starship where most other species would not have noticed the changes (DS9: &quot;Starship Down&quot;), and an ear infection can be lethal to a Ferengi if they don&apos;t seek treatment (DS9: &quot;Bar Associate&quot;). The ears, at least in males, are erogenous zones; Ferengi are seen to take sensual delight when their ears are stimulated, described by the word oo-mox. The exact meaning is unclear: &quot;there is no direct translation&quot; See Ménage à Troi (Star Trek: The Next Generation). The Ferengi also colloquially use the word lobes much as the words brains or balls are used in modern English (as in, &quot;I didn&apos;t think you had the lobes for that!&quot;).</string>
+	</dict>
+</array>
+</plist>

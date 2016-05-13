@@ -8,12 +8,116 @@
 
 import UIKit
 
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
-
+    var species: String!
+    var users_species = [String : String]()
+    var spaceships = [Spaceship]()
+    var spacebases = [Spacebase]()
+    var crystals = [Crystal]()
+    var peersList = [String : String]()
+    var mpcHandler:MPCHandler = MPCHandler()
+    
+    func getSpaceshipByPeerName(ID: String) -> Spaceship? {
+        return spaceships.filter{$0.ownerID == ID}.first
+    }
+    
+    func isSpaceshipMine(ship: Spaceship) -> Bool {
+        return ship.ownerID == mpcHandler.peerID.displayName
+    }
+    
+    func isSpacebaseMine(base: Spacebase) -> Bool {
+        return base.ownerID == mpcHandler.peerID.displayName
+    }
+    
+    func getMySpaceship() -> Spaceship? {
+        return spaceships.filter{$0.ownerID == mpcHandler.peerID.displayName}.first
+    }
+    
+    func getMySpacebase() -> Spacebase? {
+        return spacebases.filter{$0.ownerID == mpcHandler.peerID.displayName}.first
+    }
+    
+    func deleteSpaceshipByUserID(ID: String) {
+        let toBeRemoved = spaceships.filter{ $0.ownerID == ID }
+        spaceships = spaceships.filter { $0.ownerID != ID }
+        for ship in toBeRemoved {
+            ship.removeAllActions()
+            ship.removeFromParent()
+        }
+    }
+    
+    func deleteSpacebaseByUserID(ID: String) {
+        let toBeRemoved = spacebases.filter{ $0.ownerID == ID }
+        spacebases = spacebases.filter { $0.ownerID != ID }
+        for base in toBeRemoved {
+            base.removeAllActions()
+            base.removeFromParent()
+        }
+    }
+    
+    func deleteCrystal(uid: Int) {
+        let toBeRemoved = crystals.filter{ $0.uid == uid }
+        crystals = crystals.filter { $0.uid != uid }
+        for crystal in toBeRemoved {
+            crystal.removeAllActions()
+            crystal.removeFromParent()
+        }
+    }
+    
+    func deleteAllCrystals() {
+        for crystal in crystals {
+            crystal.removeAllActions()
+            crystal.removeFromParent()
+        }
+    }
+    
+    func deleteAllSpaceships() {
+        for ship in spaceships {
+            ship.removeAllActions()
+            ship.removeFromParent()
+        }
+    }
+    
+    func deleteAllSpacebases() {
+        for base in spacebases {
+            base.removeAllActions()
+            base.removeFromParent()
+        }
+    }
+    
+    func deleteMySpaceship() {
+        deleteSpaceshipByUserID(mpcHandler.peerID.displayName)
+    }
+    
+    func deleteMySpacebase() {
+        deleteSpacebaseByUserID(mpcHandler.peerID.displayName)
+    }
+    
+    func getSpacebaseByPeerName(ID: String) -> Spacebase? {
+        return spacebases.filter{$0.ownerID == ID}.first
+    }
+    
+    func allClientsInitialized() -> Bool {
+        return peersList.values.contains("initialized") || peersList.values.contains("initialized")
+    }
+    
+    func updateCrystal(message: NSDictionary) {
+        let uid = message.objectForKey("uid")?.integerValue
+        deleteCrystal(uid!)
+        let crystal = Crystal(
+            location: CGPoint(
+                x: CGFloat((message.objectForKey("x")?.doubleValue!)!),
+                y: CGFloat((message.objectForKey("y")?.doubleValue!)!)
+            ),
+            uid: uid
+        )
+        crystals.append(crystal)
+    }
+    
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         return true
