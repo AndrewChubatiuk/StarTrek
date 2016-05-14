@@ -14,8 +14,7 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
     var appDelegate:AppDelegate!
     var currentIndex : Int = 0
     var species : [[String:String]]!
-    var server = true
-    var choice: Int!
+    var choice: Int = 0
     
     @IBOutlet var pageView: UIView!
     
@@ -33,7 +32,6 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
         addChildViewController(pageViewController!)
         pageView.addSubview(pageViewController!.view)
         pageViewController!.didMoveToParentViewController(self)
-        //self.pageView
     }
     
     @IBAction func previousView(sender: UIButton) {
@@ -42,8 +40,7 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         var destViewController: ConnectionsListController = segue.destinationViewController as! ConnectionsListController
-        destViewController.server = self.server
-        self.appDelegate.species = self.species[choice]["name"]
+        self.appDelegate.getMyPlayer()!.setupSpecies(self.species[choice]["name"]!)
     }
     
     override func didReceiveMemoryWarning()

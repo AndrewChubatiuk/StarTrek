@@ -16,21 +16,13 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     
     var scene: GameplayScene!
     var normalSize: CGSize!
-    var originalOriantation: UIDeviceOrientation!
-    var deadCounter: [String: Int]!
-    var loserCounter = 0
+    var originalOrientation: UIDeviceOrientation!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         scene = GameplayScene(fileNamed:"GameplayScene")
         appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         appDelegate.mpcHandler.serviceBrowser.delegate = self
-        if deadCounter == nil {
-            deadCounter = [String: Int]()
-            for (peerID, _) in self.appDelegate.peersList {
-                deadCounter[peerID] = 0
-            }
-        }
         self.appDelegate.mpcHandler.serviceAdvertiser.startAdvertisingPeer()
         self.appDelegate.mpcHandler.serviceBrowser.startBrowsingForPeers()
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.peerChangedStateWithNotification(_:)), name: "MPC_DidChangeStateNotification", object: nil)
@@ -53,7 +45,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         skView.ignoresSiblingOrder = false
         print(skView.bounds.size)
         print(scene.size)
-        originalOriantation = UIDevice.currentDevice().orientation
+        originalOrientation = UIDevice.currentDevice().orientation
         var coef: CGFloat = 0
         if (skView.bounds.size.width > skView.bounds.height && scene.size.width > scene.size.height) || (skView.bounds.size.width < skView.bounds.height && scene.size.width < scene.size.height){
             if scene.size.width >= skView.bounds.size.width {
@@ -76,7 +68,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     
    override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
         coordinator.animateAlongsideTransition(nil){context in
-            if (UIDevice.currentDevice().orientation.isPortrait && self.originalOriantation.isLandscape) || (UIDevice.currentDevice().orientation.isLandscape && self.originalOriantation.isPortrait) {
+            if (UIDevice.currentDevice().orientation.isPortrait && self.originalOrientation.isLandscape) || (UIDevice.currentDevice().orientation.isLandscape && self.originalOrientation.isPortrait) {
                 self.scene.size = CGSize(width: self.normalSize.height, height: self.normalSize.width)
             } else {
                 self.scene.size = self.normalSize
@@ -96,36 +88,24 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     }
     
     func handleGameData(notification: NSNotification) {
-        var messageData:NSData!
-        do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(notification.userInfo!, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            print(self.appDelegate.mpcHandler.session.connectedPeers)
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Unreliable)
-        } catch {
-            print("error: Failed to create a session")
-        }
+        sendUnreliableData(notification.userInfo!)
         if notification.userInfo!["update"] as! String == "alive" {
             if notification.userInfo!["object"] as! String == "spacebase" {
-                self.appDelegate.deleteMySpacebase()
+                self.appDelegate.getMyPlayer()?.spacebase.removeFromParent()
             } else if notification.userInfo!["object"] as! String == "spaceship" {
                 if notification.userInfo!["ownerID"] == nil {
                     NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(GameplayController.endGameLoser), userInfo: nil, repeats: false)
                 } else {
                     let id = notification.userInfo!["ownerID"] as! String
-                    deadCounter[id] = deadCounter[id]! + 1
-                    for (dead, count) in deadCounter {
-                        if 2 * count >= self.appDelegate.peersList.count {
-                            self.appDelegate.deleteSpaceshipByUserID(dead)
-                            self.appDelegate.deleteSpacebaseByUserID(dead)
-                            self.appDelegate.peersList.removeValueForKey(dead)
-                            let message = ["type": "connection", "status": "loser", "ownerID": dead]
-                            sendMessage(message)
+                    appDelegate.getPlayerByPeerName(id)?.loserCounter = (appDelegate.getPlayerByPeerName(id)?.loserCounter)! + 1
+                    for player in appDelegate.players {
+                        if 2 * player.loserCounter >= self.appDelegate.players.count {
+                            appDelegate.removePlayerByID(player.peerID)
+                            let message = ["type": "connection", "status": "loser", "ownerID": player.peerID]
+                            sendReliableData(message)
                         }
                     }
-                    if self.appDelegate.peersList.count == 1 {
+                    if self.appDelegate.players.count == 1 {
                         endGame()
                     }
                 }
@@ -140,8 +120,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
         appDelegate.mpcHandler.session.disconnect()
-        self.appDelegate.deleteMySpaceship()
-        self.appDelegate.deleteMySpacebase()
+        self.appDelegate.removeMyPlayer()
         self.presentViewController(gameplayController!, animated: true, completion: nil)
     }
     
@@ -150,22 +129,28 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         let state = userInfo.objectForKey("state") as! Int
         let peerID = userInfo.objectForKey("peerID") as! MCPeerID
         if state == MCSessionState.Connected.rawValue {
-            self.appDelegate.peersList[peerID.displayName] = PlayerStatus.Waiting
-            print("CONNECTED")
-            print(peerID.displayName)
-            print(self.appDelegate.mpcHandler.session.connectedPeers)
-        } else if state == MCSessionState.NotConnected.rawValue {
-            self.appDelegate.peersList.removeValueForKey(peerID.displayName)
-            if self.appDelegate.peersList.count == 1 {
-                endGameLoser()
+            for player in appDelegate.players {
+                if player.peerID == peerID.displayName {
+                    player.status = PlayerStatus.Initialized
+                }
             }
-            print("DISCONNECTED")
-            print(peerID.displayName)
-            print(self.appDelegate.mpcHandler.session.connectedPeers)
-        } else {
-            print("CONNECTING")
-            print(peerID.displayName)
-            print(self.appDelegate.mpcHandler.session.connectedPeers)
+        } else if state == MCSessionState.NotConnected.rawValue {
+            NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(GameplayController.checkPeer), userInfo: ["peerID": peerID.displayName], repeats: false)
+        }
+    }
+    
+    func checkPeer(timer: NSTimer) {
+        let peerID = (timer.userInfo as! [String : String])["peerID"]
+        if appDelegate.getPlayerByPeerName(peerID!) != nil {
+            if appDelegate.getPlayerByPeerName(peerID!)!.status == PlayerStatus.Initialized {
+                if self.appDelegate.mpcHandler.session.connectedPeers.count == 0 && self.appDelegate.players.count > 2 {
+                    appDelegate.removePlayerByID(peerID!)
+                    endGameLoser()
+                } else {
+                    appDelegate.removePlayerByID(peerID!)
+                    endGame()
+                }
+            }
         }
     }
     
@@ -182,52 +167,48 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         let senderDisplayName = senderPeerId.displayName
         print(senderPeerId.displayName)
         if message.objectForKey("status")?.isEqualToString("loser") == true {
-            loserCounter += 1
+            self.appDelegate.getMyPlayer()?.loserCounter = (self.appDelegate.getMyPlayer()?.loserCounter)! + 1
         } else if message.objectForKey("type")?.isEqualToString("data") == true {
             if message.objectForKey("object")?.isEqualToString("spacebase") == true {
                 if message.objectForKey("update")?.isEqualToString("alive") == true {
-                    self.appDelegate.deleteSpacebaseByUserID(senderPeerId.displayName)
+                    self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spacebase.removeFromParent()
                 }
             } else if message.objectForKey("object")?.isEqualToString("spaceship") == true {
                 if message.objectForKey("update")?.isEqualToString("alive") == true {
                     if message.objectForKey("ownerID") != nil {
                         let ownerName = message.objectForKey("ownerID") as! String
-                        self.appDelegate.getSpaceshipByPeerName(ownerName)?.updateObject(message)
-                        deadCounter[ownerName] = deadCounter[ownerName]! + 1
-                        for (dead, count) in deadCounter {
-                            if 2 * count >= self.appDelegate.peersList.count {
-                                self.appDelegate.deleteSpaceshipByUserID(dead)
-                                self.appDelegate.deleteSpacebaseByUserID(dead)
-                                self.appDelegate.peersList.removeValueForKey(dead)
-                                let message = ["type": "connection", "status": "loser", "ownerID": dead]
-                                sendMessage(message)
+                        self.appDelegate.getPlayerByPeerName(ownerName)?.spaceship.updateObject(message)
+                        self.appDelegate.getPlayerByPeerName(ownerName)?.loserCounter = (self.appDelegate.getPlayerByPeerName(ownerName)?.loserCounter)! + 1
+                        for player in self.appDelegate.players {
+                            if 2 * player.loserCounter >= self.appDelegate.players.count {
+                                self.appDelegate.removePlayerByID(player.peerID)
+                                let message = ["type": "connection", "status": "loser", "ownerID": player.peerID]
+                                sendReliableData(message)
                             }
                         }
                     } else {
-                        self.appDelegate.getSpaceshipByPeerName(senderPeerId.displayName)?.updateObject(message)
-                        self.appDelegate.peersList.removeValueForKey(senderDisplayName)
-                        self.appDelegate.deleteSpaceshipByUserID(senderDisplayName)
-                        self.appDelegate.deleteSpacebaseByUserID(senderDisplayName)
+                        self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship.updateObject(message)
+                        self.appDelegate.removePlayerByID(senderDisplayName)
                     }
-                    if self.appDelegate.peersList.count == 1 {
+                    if self.appDelegate.players.count == 1 {
                         NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(GameplayController.endGame), userInfo: nil, repeats: false)
                     }
                 } else {
-                    if self.appDelegate.getSpaceshipByPeerName(senderDisplayName) != nil {
-                        self.appDelegate.getSpaceshipByPeerName(senderDisplayName)!.updateObject(message)
+                    if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
+                        self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.updateObject(message)
                     }
                 }
             } else if message.objectForKey("object")?.isEqualToString("spacebase") == true {
                 if message.objectForKey("update")?.isEqualToString("alive") == true {
-                    self.appDelegate.deleteSpacebaseByUserID(senderDisplayName)
+                    self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spacebase.removeFromParent()
                 } else {
-                    self.appDelegate.getSpacebaseByPeerName(senderDisplayName)!.updateObject(message)
+                    self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spacebase.updateObject(message)
                 }
             } else if message.objectForKey("object")?.isEqualToString("crystal") == true {
                 self.appDelegate.updateCrystal(message)
             } else if message.objectForKey("object")?.isEqualToString("bullet") == true {
-                if self.appDelegate.getSpaceshipByPeerName(senderDisplayName) != nil {
-                    self.appDelegate.getSpaceshipByPeerName(senderDisplayName)!.fire()
+                if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
+                    self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.fire()
                 }
             }
         }
@@ -235,8 +216,8 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     
     func endGame() {
         let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("ExitGameController") as? ExitGameController
-        if self.appDelegate.getMySpaceship() != nil && self.appDelegate.getMySpaceship()?.alive == true {
-            if 2 * loserCounter >= appDelegate.peersList.count {
+        if self.appDelegate.getMyPlayer() != nil && self.appDelegate.getMyPlayer()?.spaceship.alive == true {
+            if 2 * self.appDelegate.getMyPlayer()!.loserCounter >= appDelegate.players.count {
                 gameplayController?.gameOverText = "loser"
             } else {
                 gameplayController?.gameOverText = "you win"
@@ -247,8 +228,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
         appDelegate.mpcHandler.session.disconnect()
-        self.appDelegate.deleteMySpaceship()
-        self.appDelegate.deleteMySpacebase()
+        self.appDelegate.removeMyPlayer()
         self.presentViewController(gameplayController!, animated: true, completion: nil)
     }
     
@@ -273,7 +253,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     }
     
     func browser(browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-        if self.appDelegate.peersList[peerID.displayName] != nil && self.appDelegate.mpcHandler.session.connectedPeers.filter({$0.displayName == peerID.displayName }).count == 0 {
+        if self.appDelegate.getPlayerByPeerName(peerID.displayName) != nil && self.appDelegate.mpcHandler.session.connectedPeers.filter({$0.displayName == peerID.displayName }).count == 0 {
             self.appDelegate.mpcHandler.serviceBrowser.invitePeer(peerID, toSession: self.appDelegate.mpcHandler.session, withContext: nil, timeout: 10)
             
         }
@@ -288,24 +268,27 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         
     }
     
-    func sendMessage(message: [String: AnyObject]) {
+    func sendReliableData(message: NSDictionary) {
         var messageData:NSData!
         do {
             try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            print(self.appDelegate.mpcHandler.session.connectedPeers)
             try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
         } catch {
             print("error: Failed to create a session")
         }
     }
     
+    func sendUnreliableData(message: NSDictionary) {
+        var messageData:NSData!
+        do {
+            try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
+            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Unreliable)
+        } catch {
+            print("error: Failed to create a session")
+        }
+    }
+    
     deinit {
-        self.appDelegate.deleteAllSpaceships()
-        self.appDelegate.deleteAllSpacebases()
-        self.appDelegate.deleteAllCrystals()
         self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
         NSNotificationCenter.defaultCenter().removeObserver(self)

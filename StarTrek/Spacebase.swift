@@ -156,17 +156,15 @@ class Spacebase: SKSpriteNode, Exchangable {
         } 
     }
     
-    func initialMessage() -> [String: AnyObject] {
-        return [
-            "ownerID": self.ownerID,
-            "species": self.species,
-            "x": self.position.x,
-            "y": self.position.y
-        ]
-    }
-    
     func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
-        if attribute == "shield" {
+        if attribute == "initial" {
+            return [
+                "ownerID": self.ownerID,
+                "species": self.species,
+                "x": self.position.x,
+                "y": self.position.y
+            ]
+        } else if attribute == "shield" {
             return [
                 "type": "data",
                 "update": "shield",

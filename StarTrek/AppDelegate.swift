@@ -13,16 +13,35 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var species: String!
-    var users_species = [String : String]()
-    var spaceships = [Spaceship]()
-    var spacebases = [Spacebase]()
+    var players = [Player]()
     var crystals = [Crystal]()
-    var peersList = [String : String]()
+    var worldSize: Float!
     var mpcHandler:MPCHandler = MPCHandler()
     
-    func getSpaceshipByPeerName(ID: String) -> Spaceship? {
-        return spaceships.filter{$0.ownerID == ID}.first
+    func getCreatedShips() -> [Spaceship] {
+        return players.filter({$0.spaceship != nil}).map {$0.spaceship}
+    }
+    
+    func getPlayerByPeerName(ID: String) -> Player? {
+        return players.filter{$0.peerID == ID}.first
+    }
+    
+    func getMyPlayer() -> Player? {
+        let player = players.filter{$0.peerID == mpcHandler.peerID.displayName}.first
+        if player?.spaceship != nil && player?.spacebase != nil {
+            player?.spaceship.generateMessages = true
+            player?.spacebase.generateMessages = true
+        }
+        return player
+    }
+    
+    func allPlayersHaveStatus(status: Int) -> Bool {
+        for player in players {
+            if player.status != status {
+                return false
+            }
+        }
+        return true
     }
     
     func isSpaceshipMine(ship: Spaceship) -> Bool {
@@ -33,30 +52,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return base.ownerID == mpcHandler.peerID.displayName
     }
     
-    func getMySpaceship() -> Spaceship? {
-        return spaceships.filter{$0.ownerID == mpcHandler.peerID.displayName}.first
-    }
-    
-    func getMySpacebase() -> Spacebase? {
-        return spacebases.filter{$0.ownerID == mpcHandler.peerID.displayName}.first
-    }
-    
-    func deleteSpaceshipByUserID(ID: String) {
-        let toBeRemoved = spaceships.filter{ $0.ownerID == ID }
-        spaceships = spaceships.filter { $0.ownerID != ID }
-        for ship in toBeRemoved {
-            ship.removeAllActions()
-            ship.removeFromParent()
+    func removePlayerByID(peerID: String) {
+        let toBeRemoved = players.filter{ $0.peerID == peerID }
+        players = players.filter{$0.peerID != peerID}
+        for player in toBeRemoved {
+            player.spaceship.removeAllActions()
+            player.spaceship.removeFromParent()
+            player.spacebase.removeAllActions()
+            player.spacebase.removeFromParent()
         }
     }
     
-    func deleteSpacebaseByUserID(ID: String) {
-        let toBeRemoved = spacebases.filter{ $0.ownerID == ID }
-        spacebases = spacebases.filter { $0.ownerID != ID }
-        for base in toBeRemoved {
-            base.removeAllActions()
-            base.removeFromParent()
-        }
+    func removeMyPlayer() {
+        removePlayerByID(mpcHandler.peerID.displayName)
     }
     
     func deleteCrystal(uid: Int) {
@@ -75,34 +83,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         }
     }
     
-    func deleteAllSpaceships() {
-        for ship in spaceships {
-            ship.removeAllActions()
-            ship.removeFromParent()
+    func deleteAllPlayers() {
+        for player in players {
+            player.spaceship.removeAllActions()
+            player.spaceship.removeFromParent()
+            player.spacebase.removeAllActions()
+            player.spacebase.removeFromParent()
         }
-    }
-    
-    func deleteAllSpacebases() {
-        for base in spacebases {
-            base.removeAllActions()
-            base.removeFromParent()
-        }
-    }
-    
-    func deleteMySpaceship() {
-        deleteSpaceshipByUserID(mpcHandler.peerID.displayName)
-    }
-    
-    func deleteMySpacebase() {
-        deleteSpacebaseByUserID(mpcHandler.peerID.displayName)
-    }
-    
-    func getSpacebaseByPeerName(ID: String) -> Spacebase? {
-        return spacebases.filter{$0.ownerID == ID}.first
-    }
-    
-    func allClientsInitialized() -> Bool {
-        return peersList.values.contains("initialized") || peersList.values.contains("initialized")
     }
     
     func updateCrystal(message: NSDictionary) {

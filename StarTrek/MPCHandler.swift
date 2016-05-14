@@ -26,7 +26,6 @@ class MPCHandler: NSObject, MCSessionDelegate {
     
     lazy var session: MCSession = {
         let session = MCSession(peer: self.peerID)
-        print("ZHOPA")
         session.delegate = self
         return session
     }()

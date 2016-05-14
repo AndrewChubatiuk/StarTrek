@@ -68,16 +68,6 @@ class Bullet: SKSpriteNode, Exchangable {
             })
         }
     }
-
-    func initialMessage() -> [String: AnyObject] {
-        return [
-            "ownerID": self.ownerID,
-            "x": self.position.x,
-            "y": self.position.y,
-            "dx": self.destinationVector.dx,
-            "dy": self.destinationVector.dy
-        ]
-    }
     
     func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
         return [

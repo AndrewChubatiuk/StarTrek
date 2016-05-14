@@ -28,12 +28,13 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     
     override func didMoveToView(view: SKView) {
         world = childNodeWithName("world") as! SKSpriteNode
+        world.size = CGSize(width: CGFloat(4 * appDelegate.worldSize), height: CGFloat(4 * appDelegate.worldSize))
         world.color = UIColor.clearColor()
         world.physicsBody = SKPhysicsBody(edgeLoopFromRect: world.frame)
         physicsWorld.contactDelegate = self
         let screenSize = self.view?.frame.size
         let joystickView = self.camera!.childNodeWithName("joystickView")! as! SKSpriteNode
-        let joystickDimension = CGFloat(200) //screenSize?.width > screenSize?.height ? (screenSize?.height)! * 0.4 : (screenSize?.width)! * 0.4
+        let joystickDimension = CGFloat(200)
         let joystick = AnalogJoystick(diameter: joystickDimension / 10, colors: (UIColor.grayColor(), UIColor.blackColor()))
         joystick.trackingHandler = handlerTracking
         joystickView.size = CGSize(width: joystickDimension, height: joystickDimension)
@@ -43,9 +44,12 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
            y: (joystickView.size.width - (screenSize?.height)!)/2
         )
         joystickView.addChild(joystick)
-        for ship in appDelegate.spaceships {
-            if ship.parent == nil {
-                self.world.addChild(ship)
+        for player in appDelegate.players {
+            if player.spaceship.parent == nil {
+                self.world.addChild(player.spaceship)
+            }
+            if player.spacebase.parent == nil {
+                self.world.addChild(player.spacebase)
             }
         }
         for crystal in appDelegate.crystals {
@@ -53,26 +57,21 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
                 self.world.addChild(crystal)
             }
         }
-        for base in appDelegate.spacebases {
-            if base.parent == nil {
-                self.world.addChild(base)
-            }
-        }
-        self.starBackground()
+        self.starEmitter()
         initialized = true
 
     }
 
     
     func handlerTracking(data: AnalogJoystickData) {
-        if self.appDelegate.getMySpaceship() != nil {
-            self.appDelegate.getMySpaceship()!.move(data.angular, velocity: data.velocity)
-            self.camera!.runAction(SKAction.moveTo(self.appDelegate.getMySpaceship()!.position, duration: 0.1))
+        if self.appDelegate.getMyPlayer() != nil {
+            self.appDelegate.getMyPlayer()?.spaceship!.move(data.angular, velocity: data.velocity)
+            self.camera!.runAction(SKAction.moveTo((self.appDelegate.getMyPlayer()?.spaceship!.position)!, duration: 0.1))
         }
     }
     
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
-        self.appDelegate.getMySpaceship()!.fire()
+        self.appDelegate.getMyPlayer()?.spaceship!.fire()
     }
    
     override func update(currentTime: CFTimeInterval) {
@@ -87,31 +86,17 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         node.parent!.position = CGPoint(x:node.parent!.position.x - cameraPositionInScene.x, y:node.parent!.position.y - cameraPositionInScene.y)
     }
     
-    func starEmitter(color: SKColor, speed speedY: CGFloat, frequency: CGFloat, scaleFactor: CGFloat, zPosition: CGFloat) -> SKEmitterNode {
-        
-        let emitterNode = SKEmitterNode()
-        emitterNode.particleTexture = SKTexture(imageNamed: "Star")
-        emitterNode.particleBirthRate = frequency
-        emitterNode.particleColor = color
-        emitterNode.particleSpeed = -speedY
-        emitterNode.particleScale = scaleFactor
-        emitterNode.particleColorBlendFactor = 1
-        emitterNode.particleLifetime = self.world.frame.size.height * UIScreen.mainScreen().scale / speedY
-        emitterNode.position = CGPoint(x: CGRectGetMidX(self.world.frame), y: world.frame.size.height)
-        emitterNode.particlePositionRange = CGVector(dx: self.world.frame.size.width, dy: 0)
-        emitterNode.zPosition = zPosition
-        return emitterNode
-    }
-    
-    func starBackground() {
-        let emitters = [
-            starEmitter(UIColor.grayColor(), speed: 50, frequency: 10, scaleFactor: 0.06, zPosition: -2),
-            starEmitter(UIColor.blackColor(), speed: 100, frequency: 30, scaleFactor: 0.02, zPosition: -1),]
-        emitters.map{self.world.addChild($0)}
+    func starEmitter() {
+        let starField = SKEmitterNode(fileNamed: "StarField")
+        starField!.position = CGPointMake(0, 0)
+        starField?.particlePositionRange = CGVector(dx: self.frame.width, dy: self.frame.height)
+        starField?.particleBirthRate = 150
+        starField!.zPosition = -2
+        self.camera!.addChild(starField!)
     }
     
     func explosion(pos: CGPoint) {
-        var emitterNode = SKEmitterNode(fileNamed: "Explosion.sks")
+        let emitterNode = SKEmitterNode(fileNamed: "Explosion.sks")
         emitterNode?.particleColor = UIColor.blueColor()
         emitterNode!.particlePosition = pos
         self.world.addChild(emitterNode!)

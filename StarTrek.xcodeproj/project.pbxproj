@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		9A01B65B1CE3E9A900A6602A /* BrowserController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A01B65A1CE3E9A900A6602A /* BrowserController.swift */; };
 		9A01B65D1CE3EC9000A6602A /* BrowserViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A01B65C1CE3EC9000A6602A /* BrowserViewCell.swift */; };
+		9A24D8D01CE711D90006943F /* GameUtils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A24D8CF1CE711D90006943F /* GameUtils.swift */; };
+		9A24D8D21CE712720006943F /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A24D8D11CE712720006943F /* Player.swift */; };
 		9A381E2C1CD0EF8400ED4C5C /* MPCHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A381E2B1CD0EF8400ED4C5C /* MPCHandler.swift */; };
 		9A381E361CD15ADE00ED4C5C /* ExternalAccessory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A381E351CD15ADE00ED4C5C /* ExternalAccessory.framework */; };
 		9A381E3B1CD1673500ED4C5C /* Starjedi.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9A381E3A1CD1673500ED4C5C /* Starjedi.ttf */; };
@@ -32,6 +34,7 @@
 		9A68762F1CD603B700AEE3B5 /* Bullet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A68762E1CD603B700AEE3B5 /* Bullet.swift */; };
 		9A6876311CD6044700AEE3B5 /* Crystal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6876301CD6044700AEE3B5 /* Crystal.swift */; };
 		9A6876331CD604CB00AEE3B5 /* AnalogJoystick.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A6876321CD604CB00AEE3B5 /* AnalogJoystick.swift */; };
+		9A70736E1CE76C8E001132E8 /* StarField.sks in Resources */ = {isa = PBXBuildFile; fileRef = 9A70736D1CE76C8E001132E8 /* StarField.sks */; };
 		9A866FBC1CDA800300D7FE14 /* Bar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A866FBB1CDA800300D7FE14 /* Bar.swift */; };
 		9A8781AE1CDDF25800B34BA0 /* Message.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A8781AD1CDDF25800B34BA0 /* Message.swift */; };
 		9A902DC81CCF658B000EB20B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A902DC71CCF658B000EB20B /* AppDelegate.swift */; };
@@ -65,6 +68,8 @@
 /* Begin PBXFileReference section */
 		9A01B65A1CE3E9A900A6602A /* BrowserController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BrowserController.swift; sourceTree = "<group>"; };
 		9A01B65C1CE3EC9000A6602A /* BrowserViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BrowserViewCell.swift; sourceTree = "<group>"; };
+		9A24D8CF1CE711D90006943F /* GameUtils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = GameUtils.swift; sourceTree = "<group>"; };
+		9A24D8D11CE712720006943F /* Player.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		9A381E2B1CD0EF8400ED4C5C /* MPCHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MPCHandler.swift; sourceTree = "<group>"; };
 		9A381E351CD15ADE00ED4C5C /* ExternalAccessory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ExternalAccessory.framework; path = System/Library/Frameworks/ExternalAccessory.framework; sourceTree = SDKROOT; };
 		9A381E371CD15ADE00ED4C5C /* StarTrek.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = StarTrek.entitlements; sourceTree = "<group>"; };
@@ -89,6 +94,7 @@
 		9A68762E1CD603B700AEE3B5 /* Bullet.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bullet.swift; sourceTree = "<group>"; };
 		9A6876301CD6044700AEE3B5 /* Crystal.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Crystal.swift; sourceTree = "<group>"; };
 		9A6876321CD604CB00AEE3B5 /* AnalogJoystick.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AnalogJoystick.swift; sourceTree = "<group>"; };
+		9A70736D1CE76C8E001132E8 /* StarField.sks */ = {isa = PBXFileReference; lastKnownFileType = file.sks; path = StarField.sks; sourceTree = "<group>"; };
 		9A866FBB1CDA800300D7FE14 /* Bar.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bar.swift; sourceTree = "<group>"; };
 		9A8781AD1CDDF25800B34BA0 /* Message.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
 		9A902DC41CCF658B000EB20B /* StarTrek.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = StarTrek.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -152,6 +158,8 @@
 			children = (
 				9A381E2B1CD0EF8400ED4C5C /* MPCHandler.swift */,
 				9A8781AD1CDDF25800B34BA0 /* Message.swift */,
+				9A24D8CF1CE711D90006943F /* GameUtils.swift */,
+				9A24D8D11CE712720006943F /* Player.swift */,
 			);
 			name = MCObjects;
 			sourceTree = "<group>";
@@ -225,6 +233,7 @@
 				9A51F0321CDC7F2F00E9760C /* star.png */,
 				9A51F0371CDCF20A00E9760C /* CrystalParticle.sks */,
 				9A518EB31CE20F54009847A6 /* StarsFalling.scnp */,
+				9A70736D1CE76C8E001132E8 /* StarField.sks */,
 			);
 			path = StarTrek;
 			sourceTree = "<group>";
@@ -372,6 +381,7 @@
 				9A4927CB1CDB88D20038C1DF /* GameplayScene.sks in Resources */,
 				9A4927C71CDB80EE0038C1DF /* Turbine.sks in Resources */,
 				9A4927C41CDB7E730038C1DF /* Explosion.sks in Resources */,
+				9A70736E1CE76C8E001132E8 /* StarField.sks in Resources */,
 				9A902DD11CCF658B000EB20B /* Main.storyboard in Resources */,
 				9A381E3F1CD1689800ED4C5C /* Fonts in Resources */,
 			);
@@ -402,6 +412,7 @@
 				9AF097381CE3874F00D2AD6F /* ExitGameController.swift in Sources */,
 				9A68762B1CD6037A00AEE3B5 /* Spaceship.swift in Sources */,
 				9A6875E51CD5203700AEE3B5 /* ConnectionsListController.swift in Sources */,
+				9A24D8D21CE712720006943F /* Player.swift in Sources */,
 				9A381E2C1CD0EF8400ED4C5C /* MPCHandler.swift in Sources */,
 				9A6875E71CD531CB00AEE3B5 /* ConnectionTableViewCell.swift in Sources */,
 				9A902DCE1CCF658B000EB20B /* MainMenuController.swift in Sources */,
@@ -415,6 +426,7 @@
 				9A01B65D1CE3EC9000A6602A /* BrowserViewCell.swift in Sources */,
 				9A68762D1CD6039000AEE3B5 /* Spacebase.swift in Sources */,
 				9A68762F1CD603B700AEE3B5 /* Bullet.swift in Sources */,
+				9A24D8D01CE711D90006943F /* GameUtils.swift in Sources */,
 				9A6876311CD6044700AEE3B5 /* Crystal.swift in Sources */,
 				9A6876331CD604CB00AEE3B5 /* AnalogJoystick.swift in Sources */,
 			);

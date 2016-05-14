@@ -9,11 +9,6 @@
 import Foundation
 import UIKit
 
-struct PlayerStatus {
-    static let Ready: String = "ready"
-    static let Waiting: String = "waiting"
-}
-
 class ConnectionTableViewCell : UITableViewCell {
     
     @IBOutlet var playerName: UILabel!
@@ -27,8 +22,8 @@ class ConnectionTableViewCell : UITableViewCell {
         super.setSelected(selected, animated: animated)
     }
     
-    func loadItem(name: String, status: String) {
-        if status == PlayerStatus.Ready {
+    func loadItem(name: String, status: Int) {
+        if status == PlayerStatus.Ready || status == PlayerStatus.Initialized {
             playerConnectionStatus.image = UIImage(named: "good.png")
         } else {
             playerConnectionStatus.image = UIImage(named: "bad.png")

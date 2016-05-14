@@ -42,23 +42,23 @@ class Crystal: SKSpriteNode, Exchangable {
         self.position = location
     }
     
-    func initialMessage() -> [String: AnyObject] {
-        return [
-            "uid": self.uid,
-            "x": self.position.x,
-            "y": self.position.y
-        ]
-    }
-    
     func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
-        return [
-            "type": "data",
-            "update": "location",
-            "object": "crystal",
-            "uid": self.uid,
-            "x": self.position.x,
-            "y": self.position.y
-        ]
+        if attribute == "initial" {
+            return [
+                "uid": self.uid,
+                "x": self.position.x,
+                "y": self.position.y
+            ]
+        } else {
+            return [
+                "type": "data",
+                "update": "location",
+                "object": "crystal",
+                "uid": self.uid,
+                "x": self.position.x,
+                "y": self.position.y
+            ]
+        }
     }
     
     static func createFromData(data: NSDictionary) -> Exchangable {

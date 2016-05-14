@@ -38,7 +38,7 @@ class BrowserController: UIViewController, UITableViewDelegate, UITableViewDataS
         if state == MCSessionState.Connected.rawValue {
             if peerID.displayName == selectedPeer.displayName {
                 let newGameController = self.storyboard?.instantiateViewControllerWithIdentifier("NewGameViewController") as? NewGameViewController
-                newGameController?.server = false
+                self.appDelegate.getMyPlayer()!.server = false
                 self.presentViewController(newGameController!, animated: true, completion: nil)
             }
         }

@@ -14,58 +14,42 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     @IBOutlet var startButton: UIButton!
     var appDelegate:AppDelegate!
     @IBOutlet var connectionsTable: UITableView!
-    var server: Bool!
     
     @IBAction func sendGeneratedMap(sender: UIButton) {
-        let mapObjects = generateGameMap()
-        appDelegate.spacebases = mapObjects.spacebases
-        appDelegate.spaceships = mapObjects.spaceships
-        appDelegate.crystals = mapObjects.crystals
-        self.appDelegate.peersList[self.appDelegate.mpcHandler.peerID.displayName] = "initialized"
+        appDelegate.worldSize = Float(self.appDelegate.players.count * 1000)
+        appDelegate.crystals = GameUtils.generateGameMap(
+            CGFloat(appDelegate.worldSize),
+            players: self.appDelegate.players
+        )
+        self.appDelegate.getMyPlayer()?.status = PlayerStatus.Initialized
         let messageDict = [
-            "type":"data",
-            "status": "initialize",
-            "spacebases": Message.createMessageArray(mapObjects.spacebases),
-            "spaceships": Message.createMessageArray(mapObjects.spaceships),
-            "crystals": Message.createMessageArray(mapObjects.crystals)
+            "type": "data",
+            "status": PlayerStatus.Initialize,
+            "worldSize": appDelegate.worldSize,
+            "players": Message.createMessageArray(appDelegate.players),
+            "crystals": Message.createMessageArray(appDelegate.crystals)
         ]
-        self.appDelegate.getMySpacebase()?.generateMessages = true
-        self.appDelegate.getMySpaceship()?.generateMessages = true
-        var messageData:NSData!
-        do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(messageDict, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
-        } catch {
-            print("error: Failed to create a session")
-        }
-        
+        sendReliableData(messageDict)
     }
     
     override func viewDidLoad()
     {
         appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
         super.viewDidLoad()
-        if server == false {
+        if self.appDelegate.getMyPlayer()!.server == false {
             self.startButton.enabled = false
             self.startButton.hidden = true
         }
-        if self.appDelegate.peersList.count <= 1 && server == true {
+        if self.appDelegate.players.count <= 1 && self.appDelegate.getMyPlayer()!.server == true {
             self.startButton.enabled = false
             self.startButton.hidden = true
             appDelegate.mpcHandler.serviceAdvertiser.startAdvertisingPeer()
         }
-        if server == false {
+        if self.appDelegate.getMyPlayer()!.server == false {
             sendReady()
         }
-        self.appDelegate.peersList[self.appDelegate.mpcHandler.peerID.displayName] = PlayerStatus.Ready
-        self.appDelegate.users_species[self.appDelegate.mpcHandler.peerID.displayName] = self.appDelegate.species
         self.connectionsTable.registerClass(UITableViewCell.self, forCellReuseIdentifier: "connectionCell")
-        
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ConnectionsListController.peerChangedStateWithNotification(_:)), name: "MPC_DidChangeStateNotification", object: nil)
-        
         NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ConnectionsListController.handleReceivedDataWithNotification(_:)), name: "MPC_DidReceiveDataNotification", object: nil)
     }
     
@@ -78,13 +62,13 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     }
     
     func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.appDelegate.peersList.count
+        return self.appDelegate.players.count
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCellWithIdentifier("ConnectionTableViewCell", forIndexPath: indexPath) as! ConnectionTableViewCell
-        let peerID = Array(self.appDelegate.peersList.keys)[indexPath.row]
-        cell.loadItem(peerID, status: self.appDelegate.peersList[peerID]!)
+        let player = self.appDelegate.players[indexPath.row]
+        cell.loadItem(player.peerID, status: player.status)
         return cell
     }
     
@@ -93,10 +77,12 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         let state = userInfo.objectForKey("state") as! Int
         let peerID = userInfo.objectForKey("peerID") as! MCPeerID
         if state == MCSessionState.Connected.rawValue {
-            self.appDelegate.peersList[peerID.displayName] = PlayerStatus.Waiting
+            self.appDelegate.players.append(
+                Player(peerID: peerID.displayName)
+            )
         } else if state == MCSessionState.NotConnected.rawValue {
-            self.appDelegate.peersList.removeValueForKey(peerID.displayName)
-            if self.appDelegate.peersList.count == 1 && server == true {
+            self.appDelegate.removePlayerByID(peerID.displayName)
+            if self.appDelegate.players.count == 1 && self.appDelegate.getMyPlayer()!.server == true {
                 self.startButton.enabled = false
                 self.startButton.hidden = true
             }
@@ -117,45 +103,43 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         let senderDisplayName = senderPeerId.displayName
         
         if message.objectForKey("type")?.isEqualToString("connection") == true {
-            if message.objectForKey("status")?.isEqualToString(PlayerStatus.Ready) == true && server == true {
-                self.appDelegate.peersList[senderDisplayName] = PlayerStatus.Ready
-                self.startButton.enabled = true
-                self.startButton.hidden = false
-                self.appDelegate.users_species[senderDisplayName] = message.objectForKey("species") as! String
-                sendNeighbourTable()
-                
-            } else if message.objectForKey("status")?.isEqualToString("synchronize") == true && server == false {
-                self.appDelegate.peersList = message.objectForKey("neighbours") as! [String:String]
-            } else if message.objectForKey("status")?.isEqualToString("load") == true && server == false {
+            if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Ready) == true {
+                var player = self.appDelegate.getPlayerByPeerName(senderDisplayName)
+                if player == nil {
+                    player = Player(peerID: senderDisplayName)
+                    player!.setupSpecies(message.objectForKey("species") as! String)
+                    self.appDelegate.players.append(player!)
+                } else {
+                    player!.setupSpecies(message.objectForKey("species") as! String)
+                }
+                if appDelegate.allPlayersHaveStatus(PlayerStatus.Ready) && self.appDelegate.getMyPlayer()!.server == true {
+                    self.startButton.enabled = true
+                    self.startButton.hidden = false
+                } else {
+                    self.startButton.enabled = false
+                    self.startButton.hidden = true
+                }
+            } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Load) == true {
                 let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+                NSNotificationCenter.defaultCenter().removeObserver(self)
                 self.presentViewController(gameplayController!, animated: true, completion: nil)
             }
         } else if message.objectForKey("type")?.isEqualToString("data") == true {
-            if message.objectForKey("status")?.isEqualToString("initialize") == true && server == false {
-                self.appDelegate.spacebases = Message.unpackMessageArray(self.appDelegate.spacebases, data: message.objectForKey("spacebases") as! NSArray)
-                self.appDelegate.spaceships = Message.unpackMessageArray(self.appDelegate.spaceships, data: message.objectForKey("spaceships") as! NSArray)
+            if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialize) == true && self.appDelegate.getMyPlayer()!.server == false {
+                self.appDelegate.players = Message.unpackMessageArray(self.appDelegate.players, data: message.objectForKey("players") as! NSArray)
                 self.appDelegate.crystals = Message.unpackMessageArray(self.appDelegate.crystals, data: message.objectForKey("crystals") as! NSArray)
-                self.appDelegate.getMySpacebase()?.generateMessages = true
-                self.appDelegate.getMySpaceship()?.generateMessages = true
+                self.appDelegate.worldSize = message.objectForKey("worldSize")?.floatValue
                 let messageDict = [
                     "type": "data",
-                    "status": "initialized",
+                    "status": PlayerStatus.Initialized,
                 ]
-                var messageData:NSData!
-                do {
-                    try messageData = NSJSONSerialization.dataWithJSONObject(messageDict, options: NSJSONWritingOptions.PrettyPrinted)
-                } catch {
-                }
-                do {
-                    try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
-                } catch {
-                    print("error: Failed to create a session")
-                }
-            } else if message.objectForKey("status")?.isEqualToString("initialized") == true && server == true {
-                self.appDelegate.peersList[senderDisplayName] = "initialized"
-                if self.appDelegate.allClientsInitialized() {
+                sendReliableData(messageDict)
+            } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialized) == true && self.appDelegate.getMyPlayer()!.server == true {
+                self.appDelegate.getPlayerByPeerName(senderDisplayName)!.status = PlayerStatus.Initialized
+                if self.appDelegate.allPlayersHaveStatus(PlayerStatus.Initialized) {
                     sendLoad()
                     let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+                    NSNotificationCenter.defaultCenter().removeObserver(self)
                     self.presentViewController(gameplayController!, animated: true, completion: nil)
                 }
             }
@@ -167,77 +151,19 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     func sendLoad() {
         let messageDict = [
             "type": "connection",
-            "status": "load",
+            "status": PlayerStatus.Load,
         ]
-        var messageData:NSData!
-        do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(messageDict, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
-        } catch {
-            print("error: Failed to create a session")
-        }
-    }
-    
-    func generateGameMap() -> (spaceships: [Spaceship], spacebases: [Spacebase], crystals: [Crystal]){
-        var spaceships = [Spaceship]()
-        var spacebases = [Spacebase]()
-        var crystals = [Crystal]()
-        //let xPos = CGFloat(Float(arc4random())) % 15000 - 5000
-        //let yPos = CGFloat(Float(arc4random())) % 15000 - 5000
-        for (player, _) in self.appDelegate.peersList {
-            let xPos = CGFloat(Float(arc4random())) % 1500 - 500
-            let yPos = CGFloat(Float(arc4random())) % 1500 - 500
-            let location = CGPoint(x: xPos, y: yPos )
-            spacebases.append(Spacebase(location: location, species: self.appDelegate.users_species[player]!, ownerID: player))
-            spaceships.append(Spaceship(location: location, species: self.appDelegate.users_species[player]!, ownerID: player))
-        }
-        for _ in 0 ... (self.appDelegate.peersList.count) * 10 {
-            let xPos = CGFloat(Float(arc4random())) % 1500 - 500
-            let yPos = CGFloat(Float(arc4random())) % 1500 - 500
-            let location = CGPoint(x: xPos, y: yPos)
-            crystals.append(Crystal(location: location, uid: nil))
-        }
-        return (spaceships, spacebases, crystals)
-    }
-    
-    func sendNeighbourTable() {
-        let messageDict = [
-            "type": "connection",
-            "status": "synchronize",
-            "neighbours": self.appDelegate.peersList
-        ]
-        var messageData:NSData!
-        do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(messageDict, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
-        } catch {
-            print("error: Failed to create a session")
-        }
+        sendReliableData(messageDict)
     }
     
     func sendReady() {
         
         let messageDict = [
-            "type":"connection",
+            "type": "connection",
             "status": PlayerStatus.Ready,
-            "species": self.appDelegate.species
+            "species": (self.appDelegate.getMyPlayer()?.species)!
         ]
-        var messageData:NSData!
-        do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(messageDict, options: NSJSONWritingOptions.PrettyPrinted)
-        } catch {
-        }
-        do {
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
-        } catch {
-            print("error: Failed to create a session")
-        }
+        sendReliableData(messageDict)
     }
     
     func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
@@ -246,6 +172,16 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
+    }
+    
+    func sendReliableData(message: NSDictionary) {
+        var messageData:NSData!
+        do {
+            try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
+            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
+        } catch {
+            print("error: Failed to create a session")
+        }
     }
     
     deinit {

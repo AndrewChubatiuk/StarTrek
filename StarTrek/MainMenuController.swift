@@ -19,6 +19,18 @@ class MainMenuController: UIViewController {
         super.viewDidLoad()
     }
     
+    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        let player = Player(
+            peerID: appDelegate.mpcHandler.peerID.displayName
+        )
+        appDelegate.players = [Player]()
+        appDelegate.crystals = [Crystal]()
+        if appDelegate.getMyPlayer() == nil {
+            appDelegate.players.append(player)
+        }
+    }
+    
     override func shouldAutorotate() -> Bool {
         return true
     }
