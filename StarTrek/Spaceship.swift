@@ -83,8 +83,6 @@ class Spaceship: SKSpriteNode, Exchangable {
     func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
         if attribute == "initial" {
             return [
-                "ownerID": self.ownerID,
-                "species": self.species,
                 "x": self.position.x,
                 "y": self.position.y
             ]

@@ -75,16 +75,16 @@ class Player : NSObject, Exchangable {
                 "peerID": peerID,
                 "status": status,
                 "species": species,
-                "spaceship": spaceship.objectUpdatesMessage("initial"),
-                "spacebase": spacebase.objectUpdatesMessage("initial")
+                "x": spaceship.position.x,
+                "y": spaceship.position.y
             ]
         } else {
             return [
                 "peerID": peerID,
                 "status": status,
                 "species": species,
-                "spaceship": spaceship.objectUpdatesMessage("initial"),
-                "spacebase": spacebase.objectUpdatesMessage("initial")
+                "x": spaceship.position.x,
+                "y": spaceship.position.y
             ]
         }
     }
@@ -93,8 +93,12 @@ class Player : NSObject, Exchangable {
         let player = Player(peerID: data.objectForKey("peerID") as! String)
         player.setupSpecies(data.objectForKey("species") as! String)
         player.status = data.objectForKey("status")?.integerValue
-        player.spacebase = Spacebase.createFromData(data.objectForKey("spacebase") as! NSDictionary) as! Spacebase
-        player.spaceship = Spaceship.createFromData(data.objectForKey("spaceship") as! NSDictionary) as! Spaceship
+        player.createSpaceship(
+            CGPoint(
+                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
+                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+            )
+        )
         return player
     }
     
