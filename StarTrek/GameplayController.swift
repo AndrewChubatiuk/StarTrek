@@ -89,7 +89,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     
     func handleGameData(notification: NSNotification) {
         sendUnreliableData(notification.userInfo!)
-        if notification.userInfo!["update"] as! String == "alive" {
+        if notification.userInfo!["update"] != nil && notification.userInfo!["update"] as! String == "alive" {
             if notification.userInfo!["object"] as! String == "spacebase" {
                 self.appDelegate.getMyPlayer()?.spacebase.removeFromParent()
             } else if notification.userInfo!["object"] as! String == "spaceship" {
@@ -101,7 +101,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                     for player in appDelegate.players {
                         if 2 * player.loserCounter >= self.appDelegate.players.count {
                             appDelegate.removePlayerByID(player.peerID)
-                            let message = ["type": "connection", "status": "loser", "ownerID": player.peerID]
+                            let message = ["status": "loser", "ownerID": player.peerID]
                             sendReliableData(message)
                         }
                     }
@@ -117,8 +117,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     func endGameLoser() {
         let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("ExitGameController") as? ExitGameController
         gameplayController?.gameOverText = "loser"
-        self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
-        self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
+        close()
         appDelegate.mpcHandler.session.disconnect()
         self.appDelegate.removeMyPlayer()
         self.presentViewController(gameplayController!, animated: true, completion: nil)
@@ -165,16 +164,21 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         }
         let senderPeerId:MCPeerID = userInfo["peerID"] as! MCPeerID
         let senderDisplayName = senderPeerId.displayName
-        print(senderPeerId.displayName)
         if message.objectForKey("status")?.isEqualToString("loser") == true {
             self.appDelegate.getMyPlayer()?.loserCounter = (self.appDelegate.getMyPlayer()?.loserCounter)! + 1
-        } else if message.objectForKey("type")?.isEqualToString("data") == true {
-            if message.objectForKey("object")?.isEqualToString("spacebase") == true {
-                if message.objectForKey("update")?.isEqualToString("alive") == true {
+        } else if message.objectForKey("object")?.isEqualToString("bullet") == true {
+            if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
+                self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.fire()
+            }
+        } else {
+            let objectName = message.objectForKey("object") as! String
+            let update = message.objectForKey("update") as! String
+            if objectName == "spacebase" {
+                if update == "alive" {
                     self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spacebase.removeFromParent()
                 }
-            } else if message.objectForKey("object")?.isEqualToString("spaceship") == true {
-                if message.objectForKey("update")?.isEqualToString("alive") == true {
+            } else if objectName == "spaceship" {
+                if update == "alive" {
                     if message.objectForKey("ownerID") != nil {
                         let ownerName = message.objectForKey("ownerID") as! String
                         self.appDelegate.getPlayerByPeerName(ownerName)?.spaceship.updateObject(message)
@@ -182,7 +186,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                         for player in self.appDelegate.players {
                             if 2 * player.loserCounter >= self.appDelegate.players.count {
                                 self.appDelegate.removePlayerByID(player.peerID)
-                                let message = ["type": "connection", "status": "loser", "ownerID": player.peerID]
+                                let message = ["status": "loser", "ownerID": player.peerID]
                                 sendReliableData(message)
                             }
                         }
@@ -198,18 +202,14 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                         self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.updateObject(message)
                     }
                 }
-            } else if message.objectForKey("object")?.isEqualToString("spacebase") == true {
-                if message.objectForKey("update")?.isEqualToString("alive") == true {
+            } else if objectName == "spacebase" {
+                if update == "alive" {
                     self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spacebase.removeFromParent()
                 } else {
                     self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spacebase.updateObject(message)
                 }
-            } else if message.objectForKey("object")?.isEqualToString("crystal") == true {
+            } else if objectName == "crystal" {
                 self.appDelegate.updateCrystal(message)
-            } else if message.objectForKey("object")?.isEqualToString("bullet") == true {
-                if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
-                    self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.fire()
-                }
             }
         }
     }
@@ -225,8 +225,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         } else {
             gameplayController?.gameOverText = "loser"
         }
-        self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
-        self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
+        close()
         appDelegate.mpcHandler.session.disconnect()
         self.appDelegate.removeMyPlayer()
         self.presentViewController(gameplayController!, animated: true, completion: nil)
@@ -288,7 +287,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         }
     }
     
-    deinit {
+    func close() {
         self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
         NSNotificationCenter.defaultCenter().removeObserver(self)

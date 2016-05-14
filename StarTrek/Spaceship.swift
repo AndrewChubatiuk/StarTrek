@@ -88,14 +88,12 @@ class Spaceship: SKSpriteNode, Exchangable {
             ]
         } else if attribute == "shield" {
             return [
-                "type": "data",
                 "update": "shield",
                 "object": "spaceship",
                 "shield": self.shield
             ]
         } else if attribute == "energy" {
             return [
-                "type": "data",
                 "update": "energy",
                 "object": "spaceship",
                 "energy": self.energy,
@@ -103,7 +101,6 @@ class Spaceship: SKSpriteNode, Exchangable {
         } else if attribute == "alive" {
             if generateMessages == true {
                 return [
-                    "type": "data",
                     "update": "alive",
                     "x": self.position.x,
                     "y": self.position.y,
@@ -112,7 +109,6 @@ class Spaceship: SKSpriteNode, Exchangable {
                 ]
             } else {
                 return [
-                    "type": "data",
                     "update": "alive",
                     "x": self.position.x,
                     "y": self.position.y,
@@ -123,7 +119,6 @@ class Spaceship: SKSpriteNode, Exchangable {
             }
         } else {
             return [
-                "type": "data",
                 "update": "movement",
                 "object": "spaceship",
                 "angle": self.spaceshipImage.zRotation,

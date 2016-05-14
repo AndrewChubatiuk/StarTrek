@@ -54,11 +54,6 @@ class Bullet: SKSpriteNode, Exchangable {
         track.emissionAngle = angle + 3 * 3.14 / 2
     }
     
-    func move_recieve() {
-        let bulletAction = SKAction.sequence([SKAction.moveBy(destinationVector, duration: 2), SKAction.removeFromParent()])
-        self.runAction(bulletAction)
-    }
-    
     func move() {
         let bulletAction = SKAction.sequence([SKAction.moveBy(destinationVector, duration: 2), SKAction.removeFromParent()])
         self.runAction(bulletAction)
@@ -71,11 +66,7 @@ class Bullet: SKSpriteNode, Exchangable {
     
     func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
         return [
-            "type": "data",
-            "update": "direction",
-            "object": "bullet",
-            "x": self.position.x,
-            "y": self.position.y
+            "object": "bullet"
         ]
     }
     

@@ -164,21 +164,18 @@ class Spacebase: SKSpriteNode, Exchangable {
             ]
         } else if attribute == "shield" {
             return [
-                "type": "data",
                 "update": "shield",
                 "object": "spacebase",
                 "shield": self.shield
             ]
         } else if attribute == "alive" {
             return [
-                "type": "data",
                 "update": "alive",
                 "object": "spacebase",
                 "alive": self.alive
             ]
         } else {
             return [
-                "type": "data",
                 "update": "energy",
                 "object": "spacebase",
                 "energy": self.energy,

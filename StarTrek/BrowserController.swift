@@ -28,6 +28,7 @@ class BrowserController: UIViewController, UITableViewDelegate, UITableViewDataS
     }
     
     @IBAction func previousView(sender: UIButton) {
+        self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.dismissViewControllerAnimated(true, completion: nil)
     }
     
@@ -39,6 +40,7 @@ class BrowserController: UIViewController, UITableViewDelegate, UITableViewDataS
             if peerID.displayName == selectedPeer.displayName {
                 let newGameController = self.storyboard?.instantiateViewControllerWithIdentifier("NewGameViewController") as? NewGameViewController
                 self.appDelegate.getMyPlayer()!.server = false
+                self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
                 self.presentViewController(newGameController!, animated: true, completion: nil)
             }
         }
@@ -78,10 +80,6 @@ class BrowserController: UIViewController, UITableViewDelegate, UITableViewDataS
     func browser(browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         foundPeers = foundPeers.filter{$0.displayName != peerID.displayName}
         connectionsTable.reloadData()
-    }
-    
-    deinit {
-        self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
     }
     
 }

@@ -23,7 +23,6 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         )
         self.appDelegate.getMyPlayer()?.status = PlayerStatus.Initialized
         let messageDict = [
-            "type": "data",
             "status": PlayerStatus.Initialize,
             "worldSize": appDelegate.worldSize,
             "players": Message.createMessageArray(appDelegate.players),
@@ -101,56 +100,50 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         }
         let senderPeerId:MCPeerID = userInfo["peerID"] as! MCPeerID
         let senderDisplayName = senderPeerId.displayName
-        
-        if message.objectForKey("type")?.isEqualToString("connection") == true {
-            if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Ready) == true {
-                var player = self.appDelegate.getPlayerByPeerName(senderDisplayName)
-                if player == nil {
-                    player = Player(peerID: senderDisplayName)
-                    player!.setupSpecies(message.objectForKey("species") as! String)
-                    self.appDelegate.players.append(player!)
-                } else {
-                    player!.setupSpecies(message.objectForKey("species") as! String)
-                }
-                if appDelegate.allPlayersHaveStatus(PlayerStatus.Ready) && self.appDelegate.getMyPlayer()!.server == true {
-                    self.startButton.enabled = true
-                    self.startButton.hidden = false
-                } else {
-                    self.startButton.enabled = false
-                    self.startButton.hidden = true
-                }
-            } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Load) == true {
+        if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Ready) == true {
+            var player = self.appDelegate.getPlayerByPeerName(senderDisplayName)
+            if player == nil {
+                player = Player(peerID: senderDisplayName)
+                player!.setupSpecies(message.objectForKey("species") as! String)
+                self.appDelegate.players.append(player!)
+            } else {
+                player!.setupSpecies(message.objectForKey("species") as! String)
+            }
+            if appDelegate.allPlayersHaveStatus(PlayerStatus.Ready) && self.appDelegate.getMyPlayer()!.server == true {
+                self.startButton.enabled = true
+                self.startButton.hidden = false
+            } else {
+                self.startButton.enabled = false
+                self.startButton.hidden = true
+            }
+        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Load) == true {
+            let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+            appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
+            NSNotificationCenter.defaultCenter().removeObserver(self)
+            self.presentViewController(gameplayController!, animated: true, completion: nil)
+        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialize) == true && self.appDelegate.getMyPlayer()!.server == false {
+            self.appDelegate.players = Message.unpackMessageArray(self.appDelegate.players, data: message.objectForKey("players") as! NSArray)
+            self.appDelegate.crystals = Message.unpackMessageArray(self.appDelegate.crystals, data: message.objectForKey("crystals") as! NSArray)
+            self.appDelegate.worldSize = message.objectForKey("worldSize")?.floatValue
+            let messageDict = [
+                "status": PlayerStatus.Initialized,
+            ]
+            sendReliableData(messageDict)
+        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialized) == true && self.appDelegate.getMyPlayer()!.server == true {
+            self.appDelegate.getPlayerByPeerName(senderDisplayName)!.status = PlayerStatus.Initialized
+            if self.appDelegate.allPlayersHaveStatus(PlayerStatus.Initialized) {
+                sendLoad()
                 let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+                appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
                 NSNotificationCenter.defaultCenter().removeObserver(self)
                 self.presentViewController(gameplayController!, animated: true, completion: nil)
             }
-        } else if message.objectForKey("type")?.isEqualToString("data") == true {
-            if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialize) == true && self.appDelegate.getMyPlayer()!.server == false {
-                self.appDelegate.players = Message.unpackMessageArray(self.appDelegate.players, data: message.objectForKey("players") as! NSArray)
-                self.appDelegate.crystals = Message.unpackMessageArray(self.appDelegate.crystals, data: message.objectForKey("crystals") as! NSArray)
-                self.appDelegate.worldSize = message.objectForKey("worldSize")?.floatValue
-                let messageDict = [
-                    "type": "data",
-                    "status": PlayerStatus.Initialized,
-                ]
-                sendReliableData(messageDict)
-            } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialized) == true && self.appDelegate.getMyPlayer()!.server == true {
-                self.appDelegate.getPlayerByPeerName(senderDisplayName)!.status = PlayerStatus.Initialized
-                if self.appDelegate.allPlayersHaveStatus(PlayerStatus.Initialized) {
-                    sendLoad()
-                    let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
-                    NSNotificationCenter.defaultCenter().removeObserver(self)
-                    self.presentViewController(gameplayController!, animated: true, completion: nil)
-                }
-            }
         }
         connectionsTable.reloadData()
-        
     }
     
     func sendLoad() {
         let messageDict = [
-            "type": "connection",
             "status": PlayerStatus.Load,
         ]
         sendReliableData(messageDict)
@@ -159,7 +152,6 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     func sendReady() {
         
         let messageDict = [
-            "type": "connection",
             "status": PlayerStatus.Ready,
             "species": (self.appDelegate.getMyPlayer()?.species)!
         ]
@@ -182,11 +174,6 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         } catch {
             print("error: Failed to create a session")
         }
-    }
-    
-    deinit {
-        appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
-        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
     
 }

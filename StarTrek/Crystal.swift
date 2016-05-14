@@ -51,7 +51,6 @@ class Crystal: SKSpriteNode, Exchangable {
             ]
         } else {
             return [
-                "type": "data",
                 "update": "location",
                 "object": "crystal",
                 "uid": self.uid,
