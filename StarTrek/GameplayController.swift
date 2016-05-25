@@ -101,7 +101,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                     for player in appDelegate.players {
                         if 2 * player.loserCounter >= self.appDelegate.players.count {
                             appDelegate.removePlayerByID(player.peerID)
-                            let message = ["status": "loser", "ownerID": player.peerID]
+                            let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID]
                             sendReliableData(message)
                         }
                     }
@@ -164,7 +164,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         }
         let senderPeerId:MCPeerID = userInfo["peerID"] as! MCPeerID
         let senderDisplayName = senderPeerId.displayName
-        if message.objectForKey("status")?.isEqualToString("loser") == true {
+        if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Loser) == true {
             self.appDelegate.getMyPlayer()?.loserCounter = (self.appDelegate.getMyPlayer()?.loserCounter)! + 1
         } else if message.objectForKey("object")?.isEqualToString("bullet") == true {
             if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
@@ -186,7 +186,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                         for player in self.appDelegate.players {
                             if 2 * player.loserCounter >= self.appDelegate.players.count {
                                 self.appDelegate.removePlayerByID(player.peerID)
-                                let message = ["status": "loser", "ownerID": player.peerID]
+                                let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID]
                                 sendReliableData(message)
                             }
                         }

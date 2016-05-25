@@ -18,6 +18,7 @@ struct PlayerStatus {
     static let Synchronize: Int = 5
     static let Load: Int = 6
     static let Initialize: Int = 7
+    static let Loser: Int = 8
 }
 
 class Player : NSObject, Exchangable {
