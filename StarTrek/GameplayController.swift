@@ -134,7 +134,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                 }
             }
         } else if state == MCSessionState.NotConnected.rawValue {
-            NSTimer.scheduledTimerWithTimeInterval(5, target: self, selector: #selector(GameplayController.checkPeer), userInfo: ["peerID": peerID.displayName], repeats: false)
+            NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(GameplayController.checkPeer), userInfo: ["peerID": peerID.displayName], repeats: false)
         }
     }
     

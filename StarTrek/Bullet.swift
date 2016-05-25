@@ -48,7 +48,13 @@ class Bullet: SKSpriteNode, Exchangable {
         track = SKEmitterNode(fileNamed: "Turbine.sks")
         track.particleColorSequence = nil;
         track.particleColorBlendFactor = 1.0;
-        track.particleColor = SKColor.redColor()
+        track.particleSpeed = 1000
+        track.particleSpeedRange = 500
+        track.particleScaleRange = 6
+        track.particleBirthRate = 600
+        track.particleLifetime = 0.1
+        track.emissionAngleRange = 3.14 / 4
+        track.particleColor = SKColor.orangeColor()
         track!.particlePosition = CGPoint(x: 0, y: 0)
         self.addChild(track)
         track.emissionAngle = angle + 3 * 3.14 / 2
@@ -57,6 +63,7 @@ class Bullet: SKSpriteNode, Exchangable {
     func move() {
         let bulletAction = SKAction.sequence([SKAction.moveBy(destinationVector, duration: 2), SKAction.removeFromParent()])
         self.runAction(bulletAction)
+        track.targetNode = self.scene
         if generateMessages == true {
             dispatch_async(dispatch_get_main_queue(), { () -> Void in
                 NSNotificationCenter.defaultCenter().postNotificationName("BulletData", object: nil, userInfo: self.objectUpdatesMessage("direction"))

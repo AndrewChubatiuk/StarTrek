@@ -48,10 +48,9 @@ class Spaceship: SKSpriteNode, Exchangable {
                 y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
             )
             let angle = CGFloat((data.objectForKey("angle")?.doubleValue!)!)
-            rocket.targetNode = self.scene
             self.spaceshipImage.zRotation = angle
+            self.rocket.targetNode = self.scene
             rocket.emissionAngle = angle + 3 * 3.14 / 2
-            rocket.particleSpeed = 50
             self.runAction(SKAction.moveTo(
                 pos,
                 duration: 0.1
@@ -60,15 +59,15 @@ class Spaceship: SKSpriteNode, Exchangable {
     }
     
     func move(angle: CGFloat, velocity: CGPoint) {
-        rocket.targetNode = self.scene
         self.spaceshipImage.zRotation = angle
         rocket.emissionAngle = angle + 3 * 3.14 / 2
-        rocket.particleSpeed = 50
         let shipAction = SKAction.moveBy(
             CGVector(dx: velocity.x, dy: velocity.y),
             duration: 0.2
         )
+        self.rocket.targetNode = self.scene
         self.runAction(shipAction)
+        rocket.particleSpeed = 100 * CGFloat(hypotf(Float(velocity.x), Float(velocity.y)))
         if generateMessages == true {
             if self.sending == false {
                 self.sending = true
@@ -183,6 +182,9 @@ class Spaceship: SKSpriteNode, Exchangable {
         addChild(label)
         rocket = SKEmitterNode(fileNamed: "Turbine.sks")
         rocket!.particlePosition = CGPoint(x: 0, y: self.spaceshipImage.frame.minY)
+        rocket.targetNode = self.scene
+        rocket.particleSpeed = 500
+        rocket.emissionAngleRange = 3.14 / 8
         spaceshipImage.addChild(rocket!)
         shieldImage = SKSpriteNode(imageNamed: "shield")
         let radius = size.width > size.height ? size.width * 1.2 : size.height * 1.2

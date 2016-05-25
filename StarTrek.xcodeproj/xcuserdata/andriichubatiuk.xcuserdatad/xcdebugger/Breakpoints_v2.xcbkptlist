@@ -106,13 +106,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "StarTrek/Spaceship.swift"
-            timestampString = "484933085.26811"
+            timestampString = "485127121.197825"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "144"
             endingLineNumber = "144"
-            landmarkName = "init(coder:)"
-            landmarkType = "5">
+            landmarkName = "Spaceship"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -122,7 +122,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "StarTrek/Spaceship.swift"
-            timestampString = "484933085.26811"
+            timestampString = "485127121.197825"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "182"
@@ -346,11 +346,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "StarTrek/Spaceship.swift"
-            timestampString = "484933085.26811"
+            timestampString = "485127121.197825"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "205"
-            endingLineNumber = "205"
+            startingLineNumber = "207"
+            endingLineNumber = "207"
             landmarkName = "pickCrystal(_:)"
             landmarkType = "5">
             <Locations>

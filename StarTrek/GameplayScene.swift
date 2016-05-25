@@ -47,6 +47,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         for player in appDelegate.players {
             if player.spaceship.parent == nil {
                 self.world.addChild(player.spaceship)
+                player.spaceship.rocket.targetNode = self.scene
             }
             if player.spacebase.parent == nil {
                 self.world.addChild(player.spacebase)
@@ -64,7 +65,7 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
 
     
     func handlerTracking(data: AnalogJoystickData) {
-        if self.appDelegate.getMyPlayer() != nil {
+        if self.appDelegate.getMyPlayer() != nil && self.appDelegate.getMyPlayer()?.spaceship != nil {
             self.appDelegate.getMyPlayer()?.spaceship!.move(data.angular, velocity: data.velocity)
             self.camera!.runAction(SKAction.moveTo((self.appDelegate.getMyPlayer()?.spaceship!.position)!, duration: 0.1))
         }

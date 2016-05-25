@@ -17,6 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var crystals = [Crystal]()
     var worldSize: Float!
     var mpcHandler:MPCHandler = MPCHandler()
+    var backgroundTask: UIBackgroundTaskIdentifier!
     
     func getCreatedShips() -> [Spaceship] {
         return players.filter({$0.spaceship != nil}).map {$0.spaceship}
@@ -56,10 +57,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let toBeRemoved = players.filter{ $0.peerID == peerID }
         players = players.filter{$0.peerID != peerID}
         for player in toBeRemoved {
-            player.spaceship.removeAllActions()
-            player.spaceship.removeFromParent()
-            player.spacebase.removeAllActions()
-            player.spacebase.removeFromParent()
+            if player.spaceship != nil {
+                player.spaceship.removeAllActions()
+                player.spaceship.removeFromParent()
+            }
+            if player.spacebase != nil {
+                player.spacebase.removeAllActions()
+                player.spacebase.removeFromParent()
+            }
         }
     }
     
@@ -116,8 +121,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        self.backgroundTask = application.beginBackgroundTaskWithExpirationHandler{
+            application.endBackgroundTask(self.backgroundTask)
+            self.backgroundTask = UIBackgroundTaskInvalid
+        }
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
@@ -125,11 +132,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        self.backgroundTask = UIBackgroundTaskInvalid
     }
 
     func applicationWillTerminate(application: UIApplication) {
-        // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        mpcHandler.session.disconnect()
     }
 
 
