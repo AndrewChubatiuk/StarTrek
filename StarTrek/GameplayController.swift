@@ -21,31 +21,31 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         scene = GameplayScene(fileNamed:"GameplayScene")
-        appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        appDelegate = UIApplication.shared.delegate as! AppDelegate
         appDelegate.mpcHandler.serviceBrowser.delegate = self
         self.appDelegate.mpcHandler.serviceAdvertiser.startAdvertisingPeer()
         self.appDelegate.mpcHandler.serviceBrowser.startBrowsingForPeers()
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.peerChangedStateWithNotification(_:)), name: "MPC_DidChangeStateNotification", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.peerChangedStateWithNotification(_:)), name: NSNotification.Name(rawValue: "MPC_DidChangeStateNotification"), object: nil)
             
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleReceivedDataWithNotification(_:)), name: "MPC_DidReceiveDataNotification", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleReceivedDataWithNotification(_:)), name: NSNotification.Name(rawValue: "MPC_DidReceiveDataNotification"), object: nil)
             
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: "SpaceshipData", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: NSNotification.Name(rawValue: "SpaceshipData"), object: nil)
             
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: "SpacebaseData", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: NSNotification.Name(rawValue: "SpacebaseData"), object: nil)
             
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: "CrystalData", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: NSNotification.Name(rawValue: "CrystalData"), object: nil)
             
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: "BulletData", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: NSNotification.Name(rawValue: "BulletData"), object: nil)
         
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: "GameExit", object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(GameplayController.handleGameData(_:)), name: NSNotification.Name(rawValue: "GameExit"), object: nil)
         let skView = self.view as! SKView
         skView.showsFPS = false
-        skView.multipleTouchEnabled = true
+        skView.isMultipleTouchEnabled = true
         skView.showsNodeCount = false
         skView.ignoresSiblingOrder = false
         print(skView.bounds.size)
         print(scene.size)
-        originalOrientation = UIDevice.currentDevice().orientation
+        originalOrientation = UIDevice.current.orientation
         var coef: CGFloat = 0
         if (skView.bounds.size.width > skView.bounds.height && scene.size.width > scene.size.height) || (skView.bounds.size.width < skView.bounds.height && scene.size.width < scene.size.height){
             if scene.size.width >= skView.bounds.size.width {
@@ -59,50 +59,50 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         normalSize = CGSize(width: coef * skView.bounds.size.width , height: coef * skView.bounds.size.height)
         skView.bounds.size = normalSize
         scene.size = normalSize
-        scene.scaleMode = .AspectFill
+        scene.scaleMode = .aspectFill
         print(skView.bounds.size)
         print(scene.size)
         skView.presentScene(scene)
 
     }
     
-   override func viewWillTransitionToSize(size: CGSize, withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
-        coordinator.animateAlongsideTransition(nil){context in
-            if (UIDevice.currentDevice().orientation.isPortrait && self.originalOrientation.isLandscape) || (UIDevice.currentDevice().orientation.isLandscape && self.originalOrientation.isPortrait) {
+   override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        coordinator.animate(alongsideTransition: nil){context in
+            if (UIDevice.current.orientation.isPortrait && self.originalOrientation.isLandscape) || (UIDevice.current.orientation.isLandscape && self.originalOrientation.isPortrait) {
                 self.scene.size = CGSize(width: self.normalSize.height, height: self.normalSize.width)
             } else {
                 self.scene.size = self.normalSize
             }
             if self.scene.initialized == true {
-                let joystickView = self.scene.camera!.childNodeWithName("joystickView")! as! SKSpriteNode
+                let joystickView = self.scene.camera!.childNode(withName: "joystickView")! as! SKSpriteNode
                 let screenSize = self.scene.size
                 let x = (joystickView.size.width - (screenSize.width))/2
                 let y = (joystickView.size.height - (screenSize.height))/2
                 joystickView.position = CGPoint(x: x, y: y)
             }
             
-            self.scene.scaleMode = .AspectFill
+            self.scene.scaleMode = .aspectFill
             print ((self.view as! SKView).bounds.size)
             print (self.scene.size)
         }
     }
     
-    func handleGameData(notification: NSNotification) {
-        sendUnreliableData(notification.userInfo!)
+    func handleGameData(_ notification: Notification) {
+        sendUnreliableData(notification.userInfo! as NSDictionary)
         if notification.userInfo!["update"] != nil && notification.userInfo!["update"] as! String == "alive" {
             if notification.userInfo!["object"] as! String == "spacebase" {
                 self.appDelegate.getMyPlayer()?.spacebase.removeFromParent()
             } else if notification.userInfo!["object"] as! String == "spaceship" {
                 if notification.userInfo!["ownerID"] == nil {
-                    NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(GameplayController.endGameLoser), userInfo: nil, repeats: false)
+                    Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(GameplayController.endGameLoser), userInfo: nil, repeats: false)
                 } else {
                     let id = notification.userInfo!["ownerID"] as! String
                     appDelegate.getPlayerByPeerName(id)?.loserCounter = (appDelegate.getPlayerByPeerName(id)?.loserCounter)! + 1
                     for player in appDelegate.players {
                         if 2 * player.loserCounter >= self.appDelegate.players.count {
                             appDelegate.removePlayerByID(player.peerID)
-                            let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID]
-                            sendReliableData(message)
+                            let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID] as [String : Any]
+                            sendReliableData(message as NSDictionary)
                         }
                     }
                     if self.appDelegate.players.count == 1 {
@@ -115,30 +115,30 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     
     
     func endGameLoser() {
-        let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("ExitGameController") as? ExitGameController
+        let gameplayController = self.storyboard?.instantiateViewController(withIdentifier: "ExitGameController") as? ExitGameController
         gameplayController?.gameOverText = "loser"
         close()
         appDelegate.mpcHandler.session.disconnect()
         self.appDelegate.removeMyPlayer()
-        self.presentViewController(gameplayController!, animated: true, completion: nil)
+        self.present(gameplayController!, animated: true, completion: nil)
     }
     
-    func peerChangedStateWithNotification(notification: NSNotification){
+    func peerChangedStateWithNotification(_ notification: Notification){
         let userInfo = NSDictionary(dictionary: notification.userInfo!)
-        let state = userInfo.objectForKey("state") as! Int
-        let peerID = userInfo.objectForKey("peerID") as! MCPeerID
-        if state == MCSessionState.Connected.rawValue {
+        let state = userInfo.object(forKey: "state") as! Int
+        let peerID = userInfo.object(forKey: "peerID") as! MCPeerID
+        if state == MCSessionState.connected.rawValue {
             for player in appDelegate.players {
                 if player.peerID == peerID.displayName {
                     player.status = PlayerStatus.Initialized
                 }
             }
-        } else if state == MCSessionState.NotConnected.rawValue {
-            NSTimer.scheduledTimerWithTimeInterval(1, target: self, selector: #selector(GameplayController.checkPeer), userInfo: ["peerID": peerID.displayName], repeats: false)
+        } else if state == MCSessionState.notConnected.rawValue {
+            Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(GameplayController.checkPeer), userInfo: ["peerID": peerID.displayName], repeats: false)
         }
     }
     
-    func checkPeer(timer: NSTimer) {
+    func checkPeer(_ timer: Timer) {
         let peerID = (timer.userInfo as! [String : String])["peerID"]
         if appDelegate.getPlayerByPeerName(peerID!) != nil {
             if appDelegate.getPlayerByPeerName(peerID!)!.status == PlayerStatus.Initialized {
@@ -153,41 +153,41 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         }
     }
     
-    func handleReceivedDataWithNotification(notification: NSNotification){
+    func handleReceivedDataWithNotification(_ notification: Notification){
         let userInfo = notification.userInfo! as Dictionary
-        let receivedData:NSData = userInfo["data"] as! NSData
+        let receivedData:Data = userInfo["data"] as! Data
         var message:NSDictionary!
         do{
-            try message = NSJSONSerialization.JSONObjectWithData(receivedData, options: NSJSONReadingOptions.AllowFragments) as! NSDictionary
+            try message = JSONSerialization.jsonObject(with: receivedData, options: JSONSerialization.ReadingOptions.allowFragments) as! NSDictionary
         } catch {
             
         }
         let senderPeerId:MCPeerID = userInfo["peerID"] as! MCPeerID
         let senderDisplayName = senderPeerId.displayName
-        if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Loser) == true {
+        if (message.object(forKey: "status") as! Int) ==  PlayerStatus.Loser {
             self.appDelegate.getMyPlayer()?.loserCounter = (self.appDelegate.getMyPlayer()?.loserCounter)! + 1
-        } else if message.objectForKey("object")?.isEqualToString("bullet") == true {
+        } else if (message.object(forKey: "object") as AnyObject).isEqual(to: "bullet") == true {
             if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
                 self.appDelegate.getPlayerByPeerName(senderDisplayName)!.spaceship.fire()
             }
         } else {
-            let objectName = message.objectForKey("object") as! String
-            let update = message.objectForKey("update") as! String
+            let objectName = message.object(forKey: "object") as! String
+            let update = message.object(forKey: "update") as! String
             if objectName == "spacebase" {
                 if update == "alive" {
                     self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spacebase.removeFromParent()
                 }
             } else if objectName == "spaceship" {
                 if update == "alive" {
-                    if message.objectForKey("ownerID") != nil {
-                        let ownerName = message.objectForKey("ownerID") as! String
+                    if message.object(forKey: "ownerID") != nil {
+                        let ownerName = message.object(forKey: "ownerID") as! String
                         self.appDelegate.getPlayerByPeerName(ownerName)?.spaceship.updateObject(message)
                         self.appDelegate.getPlayerByPeerName(ownerName)?.loserCounter = (self.appDelegate.getPlayerByPeerName(ownerName)?.loserCounter)! + 1
                         for player in self.appDelegate.players {
                             if 2 * player.loserCounter >= self.appDelegate.players.count {
                                 self.appDelegate.removePlayerByID(player.peerID)
-                                let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID]
-                                sendReliableData(message)
+                                let message = ["status": PlayerStatus.Loser, "ownerID": player.peerID] as [String : Any]
+                                sendReliableData(message as NSDictionary)
                             }
                         }
                     } else {
@@ -195,7 +195,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
                         self.appDelegate.removePlayerByID(senderDisplayName)
                     }
                     if self.appDelegate.players.count == 1 {
-                        NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(GameplayController.endGame), userInfo: nil, repeats: false)
+                        Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(GameplayController.endGame), userInfo: nil, repeats: false)
                     }
                 } else {
                     if self.appDelegate.getPlayerByPeerName(senderDisplayName)?.spaceship != nil {
@@ -215,7 +215,7 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     }
     
     func endGame() {
-        let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("ExitGameController") as? ExitGameController
+        let gameplayController = self.storyboard?.instantiateViewController(withIdentifier: "ExitGameController") as? ExitGameController
         if self.appDelegate.getMyPlayer() != nil && self.appDelegate.getMyPlayer()?.spaceship.alive == true {
             if 2 * self.appDelegate.getMyPlayer()!.loserCounter >= appDelegate.players.count {
                 gameplayController?.gameOverText = "loser"
@@ -228,18 +228,18 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         close()
         appDelegate.mpcHandler.session.disconnect()
         self.appDelegate.removeMyPlayer()
-        self.presentViewController(gameplayController!, animated: true, completion: nil)
+        self.present(gameplayController!, animated: true, completion: nil)
     }
     
-    override func shouldAutorotate() -> Bool {
+    override var shouldAutorotate : Bool {
         return true
     }
     
-    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-            return .AllButUpsideDown
+    override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return .allButUpsideDown
         } else {
-            return .All
+            return .all
         }
     }
     
@@ -247,41 +247,41 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
         super.didReceiveMemoryWarning()
     }
     
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden : Bool {
         return true
     }
     
-    func browser(browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+    func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
         if self.appDelegate.getPlayerByPeerName(peerID.displayName) != nil && self.appDelegate.mpcHandler.session.connectedPeers.filter({$0.displayName == peerID.displayName }).count == 0 {
-            self.appDelegate.mpcHandler.serviceBrowser.invitePeer(peerID, toSession: self.appDelegate.mpcHandler.session, withContext: nil, timeout: 10)
+            self.appDelegate.mpcHandler.serviceBrowser.invitePeer(peerID, to: self.appDelegate.mpcHandler.session, withContext: nil, timeout: 10)
             
         }
         print(self.appDelegate.mpcHandler.session.connectedPeers)
     }
     
-    func browser(browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: NSError) {
+    func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
         
     }
     
-    func browser(browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+    func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
         
     }
     
-    func sendReliableData(message: NSDictionary) {
-        var messageData:NSData!
+    func sendReliableData(_ message: NSDictionary) {
+        var messageData:Data!
         do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
+            try messageData = JSONSerialization.data(withJSONObject: message, options: JSONSerialization.WritingOptions.prettyPrinted)
+            try appDelegate.mpcHandler.session.send(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, with: MCSessionSendDataMode.reliable)
         } catch {
             print("error: Failed to create a session")
         }
     }
     
-    func sendUnreliableData(message: NSDictionary) {
-        var messageData:NSData!
+    func sendUnreliableData(_ message: NSDictionary) {
+        var messageData:Data!
         do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Unreliable)
+            try messageData = JSONSerialization.data(withJSONObject: message, options: JSONSerialization.WritingOptions.prettyPrinted)
+            try appDelegate.mpcHandler.session.send(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, with: MCSessionSendDataMode.unreliable)
         } catch {
             print("error: Failed to create a session")
         }
@@ -290,6 +290,6 @@ class GameplayController: UIViewController, MCNearbyServiceBrowserDelegate {
     func close() {
         self.appDelegate.mpcHandler.serviceBrowser.stopBrowsingForPeers()
         self.appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+        NotificationCenter.default.removeObserver(self)
     }
 }

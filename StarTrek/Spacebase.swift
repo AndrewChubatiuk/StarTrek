@@ -43,9 +43,9 @@ class Spacebase: SKSpriteNode, Exchangable {
         self.species = species
         let texture = SKTexture(imageNamed: species + "_base")
         self.ownerID = ownerID
-        super.init(texture: nil, color: UIColor.clearColor(), size: texture.size())
+        super.init(texture: nil, color: UIColor.clear, size: texture.size())
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        image = SKSpriteNode(texture: texture, color: UIColor.clearColor(), size: size)
+        image = SKSpriteNode(texture: texture, color: UIColor.clear, size: size)
         self.addChild(image)
         self.physicsBody = SKPhysicsBody(
             circleOfRadius: size.width > size.height ? size.width / 2: size.height / 2
@@ -53,7 +53,7 @@ class Spacebase: SKSpriteNode, Exchangable {
         self.physicsBody?.allowsRotation = false
         self.physicsBody?.categoryBitMask = CollisionGroups.Spacebase
         self.physicsBody?.contactTestBitMask = CollisionGroups.Bullet | CollisionGroups.Spaceship
-        self.physicsBody?.dynamic = true
+        self.physicsBody?.isDynamic = true
         self.physicsBody?.usesPreciseCollisionDetection = false
         self.physicsBody?.collisionBitMask = 0
         self.position = location
@@ -62,7 +62,7 @@ class Spacebase: SKSpriteNode, Exchangable {
                 width: 100,
                 height: 12
             ),
-            color: UIColor.blueColor(),
+            color: UIColor.blue,
             maxValue: maxShield
         )
         shieldBar.setBar(shield)
@@ -76,7 +76,7 @@ class Spacebase: SKSpriteNode, Exchangable {
                 width: 100,
                 height: 12
             ),
-            color: UIColor.orangeColor(),
+            color: UIColor.orange,
             maxValue: maxEnergy
         )
         energyBar.setBar(energy)
@@ -100,7 +100,7 @@ class Spacebase: SKSpriteNode, Exchangable {
         shieldImage.zPosition = image.zPosition + 1
     }
     
-    func restoreShipShield(ship: Spaceship) {
+    func restoreShipShield(_ ship: Spaceship) {
         if energy >= ship.maxShield {
             ship.getShield(ship.maxShield)
             energy = energy - ship.maxShield
@@ -108,29 +108,29 @@ class Spacebase: SKSpriteNode, Exchangable {
             ship.getShield(energy)
             energy = 0
         }
-        shieldImage.hidden = false
+        shieldImage.isHidden = false
         if generateMessages == true {
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                NSNotificationCenter.defaultCenter().postNotificationName("SpacebaseData", object: nil, userInfo: self.objectUpdatesMessage("energy"))
+            DispatchQueue.main.async(execute: { () -> Void in
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "SpacebaseData"), object: nil, userInfo: self.objectUpdatesMessage("energy"))
             })
         }
     }
     
-    func getDamage(bullet: Bullet) {
+    func getDamage(_ bullet: Bullet) {
         if shield > bullet.damage {
             shield = shield - bullet.damage
         } else {
             if shield > 0 {
                 shield = 0
-                shieldImage.hidden = true
+                shieldImage.isHidden = true
             } else {
                 die()
             }
         }
         shieldBar.setBar(shield)
         if generateMessages == true {
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                NSNotificationCenter.defaultCenter().postNotificationName("SpacebaseData", object: nil, userInfo: self.objectUpdatesMessage("shield"))
+            DispatchQueue.main.async(execute: { () -> Void in
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "SpacebaseData"), object: nil, userInfo: self.objectUpdatesMessage("shield"))
             })
         }
     }
@@ -139,58 +139,58 @@ class Spacebase: SKSpriteNode, Exchangable {
         if alive == true {
             self.alive = false
             if generateMessages == true {
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    NSNotificationCenter.defaultCenter().postNotificationName("SpacebaseData", object: nil, userInfo: self.objectUpdatesMessage("alive"))
+                DispatchQueue.main.async(execute: { () -> Void in
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "SpacebaseData"), object: nil, userInfo: self.objectUpdatesMessage("alive"))
                 })
             }
         }
     }
     
-    func updateObject(data: NSDictionary) {
-        if data.objectForKey("update")?.isEqualToString("shield") == true {
-            self.shield = data.objectForKey("shield")?.integerValue
-        } else if data.objectForKey("update")?.isEqualToString("energy") == true {
-            self.energy = data.objectForKey("energy")?.integerValue
-        } else if data.objectForKey("update")?.isEqualToString("alive") == true {
-            self.alive = data.objectForKey("alive")?.boolValue
+    func updateObject(_ data: NSDictionary) {
+        if (data.object(forKey: "update") as AnyObject).isEqual(to: "shield") == true {
+            self.shield = (data.object(forKey: "shield") as AnyObject).intValue
+        } else if (data.object(forKey: "update") as AnyObject).isEqual(to: "energy") == true {
+            self.energy = (data.object(forKey: "energy") as AnyObject).intValue
+        } else if (data.object(forKey: "update") as AnyObject).isEqual(to: "alive") == true {
+            self.alive = (data.object(forKey: "alive") as AnyObject).boolValue
         } 
     }
     
-    func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
+    func objectUpdatesMessage(_ attribute: String) -> [String : AnyObject] {
         if attribute == "initial" {
             return [
-                "x": self.position.x,
-                "y": self.position.y
+                "x": self.position.x as AnyObject,
+                "y": self.position.y as AnyObject
             ]
         } else if attribute == "shield" {
             return [
-                "update": "shield",
-                "object": "spacebase",
-                "shield": self.shield
+                "update": "shield" as AnyObject,
+                "object": "spacebase" as AnyObject,
+                "shield": self.shield as AnyObject
             ]
         } else if attribute == "alive" {
             return [
-                "update": "alive",
-                "object": "spacebase",
-                "alive": self.alive
+                "update": "alive" as AnyObject,
+                "object": "spacebase" as AnyObject,
+                "alive": self.alive as AnyObject
             ]
         } else {
             return [
-                "update": "energy",
-                "object": "spacebase",
-                "energy": self.energy,
+                "update": "energy" as AnyObject,
+                "object": "spacebase" as AnyObject,
+                "energy": self.energy as AnyObject,
             ]
         }
     }
     
-    static func createFromData(data: NSDictionary) -> Exchangable {
+    static func createFromData(_ data: NSDictionary) -> Exchangable {
         return Spacebase(
             location: CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue!)),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue!))
             ),
-            species: data.objectForKey("species") as! String,
-            ownerID: data.objectForKey("ownerID") as! String
+            species: data.object(forKey: "species") as! String,
+            ownerID: data.object(forKey: "ownerID") as! String
         )
     }
     

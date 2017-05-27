@@ -15,7 +15,7 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
     var appDelegate:AppDelegate!
     @IBOutlet var connectionsTable: UITableView!
     
-    @IBAction func sendGeneratedMap(sender: UIButton) {
+    @IBAction func sendGeneratedMap(_ sender: UIButton) {
         appDelegate.worldSize = Float(self.appDelegate.players.count * 1000)
         appDelegate.crystals = GameUtils.generateGameMap(
             CGFloat(appDelegate.worldSize),
@@ -27,116 +27,116 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
             "worldSize": appDelegate.worldSize,
             "players": Message.createMessageArray(appDelegate.players),
             "crystals": Message.createMessageArray(appDelegate.crystals)
-        ]
-        sendReliableData(messageDict)
+        ] as [String : Any]
+        sendReliableData(messageDict as NSDictionary)
     }
     
     override func viewDidLoad()
     {
-        appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+        appDelegate = UIApplication.shared.delegate as! AppDelegate
         super.viewDidLoad()
         if self.appDelegate.getMyPlayer()!.server == false {
-            self.startButton.enabled = false
-            self.startButton.hidden = true
+            self.startButton.isEnabled = false
+            self.startButton.isHidden = true
         }
         if self.appDelegate.players.count <= 1 && self.appDelegate.getMyPlayer()!.server == true {
-            self.startButton.enabled = false
-            self.startButton.hidden = true
+            self.startButton.isEnabled = false
+            self.startButton.isHidden = true
             appDelegate.mpcHandler.serviceAdvertiser.startAdvertisingPeer()
         }
         if self.appDelegate.getMyPlayer()!.server == false {
             sendReady()
         }
-        self.connectionsTable.registerClass(UITableViewCell.self, forCellReuseIdentifier: "connectionCell")
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ConnectionsListController.peerChangedStateWithNotification(_:)), name: "MPC_DidChangeStateNotification", object: nil)
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(ConnectionsListController.handleReceivedDataWithNotification(_:)), name: "MPC_DidReceiveDataNotification", object: nil)
+        self.connectionsTable.register(UITableViewCell.self, forCellReuseIdentifier: "connectionCell")
+        NotificationCenter.default.addObserver(self, selector: #selector(ConnectionsListController.peerChangedStateWithNotification(_:)), name: NSNotification.Name(rawValue: "MPC_DidChangeStateNotification"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(ConnectionsListController.handleReceivedDataWithNotification(_:)), name: NSNotification.Name(rawValue: "MPC_DidReceiveDataNotification"), object: nil)
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        var destViewController: GameplayController = segue.destinationViewController as! GameplayController
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        var destViewController: GameplayController = segue.destination as! GameplayController
     }
     
-    @IBAction func previousView(sender: UIButton) {
-        self.dismissViewControllerAnimated(true, completion: nil)
+    @IBAction func previousView(_ sender: UIButton) {
+        self.dismiss(animated: true, completion: nil)
     }
     
-    func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return self.appDelegate.players.count
     }
     
-    func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCellWithIdentifier("ConnectionTableViewCell", forIndexPath: indexPath) as! ConnectionTableViewCell
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ConnectionTableViewCell", for: indexPath) as! ConnectionTableViewCell
         let player = self.appDelegate.players[indexPath.row]
         cell.loadItem(player.peerID, status: player.status)
         return cell
     }
     
-    func peerChangedStateWithNotification(notification: NSNotification){
+    func peerChangedStateWithNotification(_ notification: Notification){
         let userInfo = NSDictionary(dictionary: notification.userInfo!)
-        let state = userInfo.objectForKey("state") as! Int
-        let peerID = userInfo.objectForKey("peerID") as! MCPeerID
-        if state == MCSessionState.Connected.rawValue {
+        let state = userInfo.object(forKey: "state") as! Int
+        let peerID = userInfo.object(forKey: "peerID") as! MCPeerID
+        if state == MCSessionState.connected.rawValue {
             self.appDelegate.players.append(
                 Player(peerID: peerID.displayName)
             )
-        } else if state == MCSessionState.NotConnected.rawValue {
+        } else if state == MCSessionState.notConnected.rawValue {
             self.appDelegate.removePlayerByID(peerID.displayName)
             if self.appDelegate.players.count == 1 && self.appDelegate.getMyPlayer()!.server == true {
-                self.startButton.enabled = false
-                self.startButton.hidden = true
+                self.startButton.isEnabled = false
+                self.startButton.isHidden = true
             }
         }
         connectionsTable.reloadData()
     }
     
-    func handleReceivedDataWithNotification(notification: NSNotification){
+    func handleReceivedDataWithNotification(_ notification: Notification){
         let userInfo = notification.userInfo! as Dictionary
-        let receivedData:NSData = userInfo["data"] as! NSData
+        let receivedData:Data = userInfo["data"] as! Data
         var message:NSDictionary!
         do{
-            try message = NSJSONSerialization.JSONObjectWithData(receivedData, options: NSJSONReadingOptions.AllowFragments) as! NSDictionary
+            try message = JSONSerialization.jsonObject(with: receivedData, options: JSONSerialization.ReadingOptions.allowFragments) as! NSDictionary
         } catch {
             
         }
         let senderPeerId:MCPeerID = userInfo["peerID"] as! MCPeerID
         let senderDisplayName = senderPeerId.displayName
-        if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Ready) == true {
+        if (message.object(forKey: "status") as! Int) == PlayerStatus.Ready {
             var player = self.appDelegate.getPlayerByPeerName(senderDisplayName)
             if player == nil {
                 player = Player(peerID: senderDisplayName)
-                player!.setupSpecies(message.objectForKey("species") as! String)
+                player!.setupSpecies(message.object(forKey: "species") as! String)
                 self.appDelegate.players.append(player!)
             } else {
-                player!.setupSpecies(message.objectForKey("species") as! String)
+                player!.setupSpecies(message.object(forKey: "species") as! String)
             }
             if appDelegate.allPlayersHaveStatus(PlayerStatus.Ready) && self.appDelegate.getMyPlayer()!.server == true {
-                self.startButton.enabled = true
-                self.startButton.hidden = false
+                self.startButton.isEnabled = true
+                self.startButton.isHidden = false
             } else {
-                self.startButton.enabled = false
-                self.startButton.hidden = true
+                self.startButton.isEnabled = false
+                self.startButton.isHidden = true
             }
-        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Load) == true {
-            let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+        } else if (message.object(forKey: "status") as! Int) == PlayerStatus.Load {
+            let gameplayController = self.storyboard?.instantiateViewController(withIdentifier: "GameplayController") as? GameplayController
             appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
-            NSNotificationCenter.defaultCenter().removeObserver(self)
-            self.presentViewController(gameplayController!, animated: true, completion: nil)
-        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialize) == true && self.appDelegate.getMyPlayer()!.server == false {
-            self.appDelegate.players = Message.unpackMessageArray(self.appDelegate.players, data: message.objectForKey("players") as! NSArray)
-            self.appDelegate.crystals = Message.unpackMessageArray(self.appDelegate.crystals, data: message.objectForKey("crystals") as! NSArray)
-            self.appDelegate.worldSize = message.objectForKey("worldSize")?.floatValue
+            NotificationCenter.default.removeObserver(self)
+            self.present(gameplayController!, animated: true, completion: nil)
+        } else if (message.object(forKey: "status") as! Int) == PlayerStatus.Initialize && self.appDelegate.getMyPlayer()!.server == false {
+            self.appDelegate.players = Message.unpackMessageArray(self.appDelegate.players, data: message.object(forKey: "players") as! NSArray)
+            self.appDelegate.crystals = Message.unpackMessageArray(self.appDelegate.crystals, data: message.object(forKey: "crystals") as! NSArray)
+            self.appDelegate.worldSize = (message.object(forKey: "worldSize") as AnyObject).floatValue
             let messageDict = [
                 "status": PlayerStatus.Initialized,
             ]
-            sendReliableData(messageDict)
-        } else if message.objectForKey("status")?.isEqualToNumber(PlayerStatus.Initialized) == true && self.appDelegate.getMyPlayer()!.server == true {
+            sendReliableData(messageDict as NSDictionary)
+        } else if (message.object(forKey: "status") as! Int) == PlayerStatus.Initialized && self.appDelegate.getMyPlayer()!.server == true {
             self.appDelegate.getPlayerByPeerName(senderDisplayName)!.status = PlayerStatus.Initialized
             if self.appDelegate.allPlayersHaveStatus(PlayerStatus.Initialized) {
                 sendLoad()
-                let gameplayController = self.storyboard?.instantiateViewControllerWithIdentifier("GameplayController") as? GameplayController
+                let gameplayController = self.storyboard?.instantiateViewController(withIdentifier: "GameplayController") as? GameplayController
                 appDelegate.mpcHandler.serviceAdvertiser.stopAdvertisingPeer()
-                NSNotificationCenter.defaultCenter().removeObserver(self)
-                self.presentViewController(gameplayController!, animated: true, completion: nil)
+                NotificationCenter.default.removeObserver(self)
+                self.present(gameplayController!, animated: true, completion: nil)
             }
         }
         connectionsTable.reloadData()
@@ -146,7 +146,7 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         let messageDict = [
             "status": PlayerStatus.Load,
         ]
-        sendReliableData(messageDict)
+        sendReliableData(messageDict as NSDictionary)
     }
     
     func sendReady() {
@@ -154,11 +154,11 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         let messageDict = [
             "status": PlayerStatus.Ready,
             "species": (self.appDelegate.getMyPlayer()?.species)!
-        ]
-        sendReliableData(messageDict)
+        ] as [String : Any]
+        sendReliableData(messageDict as NSDictionary)
     }
     
-    func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
     }
     
@@ -166,11 +166,11 @@ class ConnectionsListController: UIViewController, UITableViewDelegate, UITableV
         super.didReceiveMemoryWarning()
     }
     
-    func sendReliableData(message: NSDictionary) {
-        var messageData:NSData!
+    func sendReliableData(_ message: NSDictionary) {
+        var messageData:Data!
         do {
-            try messageData = NSJSONSerialization.dataWithJSONObject(message, options: NSJSONWritingOptions.PrettyPrinted)
-            try appDelegate.mpcHandler.session.sendData(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, withMode: MCSessionSendDataMode.Reliable)
+            try messageData = JSONSerialization.data(withJSONObject: message, options: JSONSerialization.WritingOptions.prettyPrinted)
+            try appDelegate.mpcHandler.session.send(messageData, toPeers: appDelegate.mpcHandler.session.connectedPeers, with: MCSessionSendDataMode.reliable)
         } catch {
             print("error: Failed to create a session")
         }

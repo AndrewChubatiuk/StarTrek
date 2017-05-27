@@ -11,14 +11,14 @@ import SpriteKit
 
 class GameplayScene: SKScene, SKPhysicsContactDelegate {
 
-    let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    let appDelegate = UIApplication.shared.delegate as! AppDelegate
     var world: SKSpriteNode!
     var controller: GameplayController!
     var initialized = false
     
-    override func didChangeSize(oldSize: CGSize) {
+    override func didChangeSize(_ oldSize: CGSize) {
         if initialized == true {
-            let joystickView = self.camera!.childNodeWithName("joystickView")! as! SKSpriteNode
+            let joystickView = self.camera!.childNode(withName: "joystickView")! as! SKSpriteNode
             let screenSize = self.view?.frame.size
             let x = (joystickView.size.width - (screenSize?.width)!)/2
             let y = (joystickView.size.height - (screenSize?.height)!)/2
@@ -26,19 +26,19 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
         }
     }
     
-    override func didMoveToView(view: SKView) {
-        world = childNodeWithName("world") as! SKSpriteNode
+    override func didMove(to view: SKView) {
+        world = childNode(withName: "world") as! SKSpriteNode
         world.size = CGSize(width: CGFloat(4 * appDelegate.worldSize), height: CGFloat(4 * appDelegate.worldSize))
-        world.color = UIColor.clearColor()
-        world.physicsBody = SKPhysicsBody(edgeLoopFromRect: world.frame)
+        world.color = UIColor.clear
+        world.physicsBody = SKPhysicsBody(edgeLoopFrom: world.frame)
         physicsWorld.contactDelegate = self
         let screenSize = self.view?.frame.size
-        let joystickView = self.camera!.childNodeWithName("joystickView")! as! SKSpriteNode
+        let joystickView = self.camera!.childNode(withName: "joystickView")! as! SKSpriteNode
         let joystickDimension = CGFloat(200)
-        let joystick = AnalogJoystick(diameter: joystickDimension / 10, colors: (UIColor.grayColor(), UIColor.blackColor()))
+        let joystick = AnalogJoystick(diameter: joystickDimension / 10, colors: (UIColor.gray, UIColor.black))
         joystick.trackingHandler = handlerTracking
         joystickView.size = CGSize(width: joystickDimension, height: joystickDimension)
-        joystickView.color = UIColor.clearColor()
+        joystickView.color = UIColor.clear
         joystickView.position = CGPoint(
            x: (joystickView.size.width - (screenSize?.width)!)/2,
            y: (joystickView.size.width - (screenSize?.height)!)/2
@@ -64,48 +64,48 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
     }
 
     
-    func handlerTracking(data: AnalogJoystickData) {
+    func handlerTracking(_ data: AnalogJoystickData) {
         if self.appDelegate.getMyPlayer() != nil && self.appDelegate.getMyPlayer()?.spaceship != nil {
             self.appDelegate.getMyPlayer()?.spaceship!.move(data.angular, velocity: data.velocity)
-            self.camera!.runAction(SKAction.moveTo((self.appDelegate.getMyPlayer()?.spaceship!.position)!, duration: 0.1))
+            self.camera!.run(SKAction.move(to: (self.appDelegate.getMyPlayer()?.spaceship!.position)!, duration: 0.1))
         }
     }
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         self.appDelegate.getMyPlayer()?.spaceship!.fire()
     }
    
-    override func update(currentTime: CFTimeInterval) {
+    override func update(_ currentTime: TimeInterval) {
     }
     
     override func didSimulatePhysics() {
         self.centerOnNode(self.camera!)
     }
     
-    func centerOnNode(node: SKNode) {
-        let cameraPositionInScene: CGPoint = node.scene!.convertPoint(node.position, fromNode: node.parent!)
+    func centerOnNode(_ node: SKNode) {
+        let cameraPositionInScene: CGPoint = node.scene!.convert(node.position, from: node.parent!)
         node.parent!.position = CGPoint(x:node.parent!.position.x - cameraPositionInScene.x, y:node.parent!.position.y - cameraPositionInScene.y)
     }
     
     func starEmitter() {
         let starField = SKEmitterNode(fileNamed: "StarField")
-        starField!.position = CGPointMake(0, 0)
+        starField!.position = CGPoint(x: 0, y: 0)
         starField?.particlePositionRange = CGVector(dx: self.frame.width, dy: self.frame.height)
         starField?.particleBirthRate = 150
         starField!.zPosition = -2
         self.camera!.addChild(starField!)
     }
     
-    func explosion(pos: CGPoint) {
+    func explosion(_ pos: CGPoint) {
         let emitterNode = SKEmitterNode(fileNamed: "Explosion.sks")
-        emitterNode?.particleColor = UIColor.blueColor()
+        emitterNode?.particleColor = UIColor.blue
         emitterNode!.particlePosition = pos
         self.world.addChild(emitterNode!)
-        self.runAction(SKAction.waitForDuration(2), completion: { emitterNode!.removeFromParent() })
+        self.run(SKAction.wait(forDuration: 2), completion: { emitterNode!.removeFromParent() })
     }
     
     
-    func didBeginContact(contact: SKPhysicsContact) {
+    func didBegin(_ contact: SKPhysicsContact) {
         
         if (contact.bodyA.node == nil || contact.bodyB.node == nil) {
             return
@@ -173,8 +173,8 @@ class GameplayScene: SKScene, SKPhysicsContactDelegate {
             let ship = (contact.bodyA.categoryBitMask == CollisionGroups.Spaceship ? contact.bodyA.node : contact.bodyB.node) as! Spaceship
             if ship.energy < ship.maxEnergy {
                 ship.pickCrystal(crystal)
-                let xPos = CGFloat(Float(arc4random())) % 1500 - 500
-                let yPos = CGFloat(Float(arc4random())) % 1500 - 500
+                let xPos = CGFloat(Float(arc4random())).truncatingRemainder(dividingBy: 1500) - 500
+                let yPos = CGFloat(Float(arc4random())).truncatingRemainder(dividingBy: 1500) - 500
                 let cryst = Crystal.regenerate(xPos, y: yPos, uid: crystal.uid)
                 self.appDelegate.deleteCrystal(crystal.uid)
                 self.appDelegate.crystals.append(cryst)

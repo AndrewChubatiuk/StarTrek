@@ -35,11 +35,11 @@ class Bullet: SKSpriteNode, Exchangable {
     init(ownerID: String, start: CGPoint, destinationVector: CGVector, angle: CGFloat) {
         self.ownerID = ownerID
         let texture = SKTexture(imageNamed: "bullet")
-        super.init(texture: texture, color: UIColor.blackColor(), size: texture.size())
+        super.init(texture: texture, color: UIColor.black, size: texture.size())
         self.position = start
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         self.physicsBody = SKPhysicsBody(texture: texture, size: size)
-        self.physicsBody?.dynamic = false
+        self.physicsBody?.isDynamic = false
         self.physicsBody?.usesPreciseCollisionDetection = false
         self.physicsBody?.collisionBitMask = 0
         self.physicsBody?.categoryBitMask = CollisionGroups.Bullet
@@ -54,41 +54,41 @@ class Bullet: SKSpriteNode, Exchangable {
         track.particleBirthRate = 600
         track.particleLifetime = 0.1
         track.emissionAngleRange = 3.14 / 4
-        track.particleColor = SKColor.orangeColor()
+        track.particleColor = SKColor.orange
         track!.particlePosition = CGPoint(x: 0, y: 0)
         self.addChild(track)
         track.emissionAngle = angle + 3 * 3.14 / 2
     }
     
     func move() {
-        let bulletAction = SKAction.sequence([SKAction.moveBy(destinationVector, duration: 2), SKAction.removeFromParent()])
-        self.runAction(bulletAction)
+        let bulletAction = SKAction.sequence([SKAction.move(by: destinationVector, duration: 2), SKAction.removeFromParent()])
+        self.run(bulletAction)
         track.targetNode = self.scene
         if generateMessages == true {
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                NSNotificationCenter.defaultCenter().postNotificationName("BulletData", object: nil, userInfo: self.objectUpdatesMessage("direction"))
+            DispatchQueue.main.async(execute: { () -> Void in
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "BulletData"), object: nil, userInfo: self.objectUpdatesMessage("direction"))
             })
         }
     }
     
-    func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
+    func objectUpdatesMessage(_ attribute: String) -> [String : AnyObject] {
         return [
-            "object": "bullet"
+            "object": "bullet" as AnyObject
         ]
     }
     
-    static func createFromData(data: NSDictionary) -> Exchangable {
+    static func createFromData(_ data: NSDictionary) -> Exchangable {
         return Bullet(
-            ownerID: data.objectForKey("ownerID") as! String,
+            ownerID: data.object(forKey: "ownerID") as! String,
             start: CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue)!),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue)!)
             ),
             destinationVector: CGVector(
-                dx: CGFloat((data.objectForKey("dx")?.doubleValue)!),
-                dy: CGFloat((data.objectForKey("dy")?.doubleValue)!)
+                dx: CGFloat(((data.object(forKey: "dx") as AnyObject).doubleValue)!),
+                dy: CGFloat(((data.object(forKey: "dy") as AnyObject).doubleValue)!)
             ),
-            angle: CGFloat((data.objectForKey("angle")?.doubleValue)!)
+            angle: CGFloat(((data.object(forKey: "angle") as AnyObject).doubleValue)!)
         )
     }
     

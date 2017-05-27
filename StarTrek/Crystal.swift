@@ -11,9 +11,10 @@ import SpriteKit
 
 class Crystal: SKSpriteNode, Exchangable {
     
-    static var nextUid = 1
+    static var nextUid = Int(1)
     static func generateUid() -> Int {
-        return nextUid++
+        nextUid = nextUid + 1
+        return nextUid
     }
     
     let energy = 50
@@ -26,7 +27,7 @@ class Crystal: SKSpriteNode, Exchangable {
     
     init(location: CGPoint, uid: Int?) {
         let texture = SKTexture(imageNamed: "crystal")
-        super.init(texture: texture, color: UIColor.clearColor(), size: texture.size())
+        super.init(texture: texture, color: UIColor.clear, size: texture.size())
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
         if uid == nil {
             self.uid = Crystal.generateUid()
@@ -34,7 +35,7 @@ class Crystal: SKSpriteNode, Exchangable {
             self.uid = uid
         }
         self.physicsBody = SKPhysicsBody(circleOfRadius: size.width > size.height ? size.width / 2 : size.height / 2)
-        self.physicsBody?.dynamic = true
+        self.physicsBody?.isDynamic = true
         self.physicsBody?.usesPreciseCollisionDetection = true
         self.physicsBody?.collisionBitMask = 0
         self.physicsBody?.categoryBitMask = CollisionGroups.Crystal
@@ -42,38 +43,38 @@ class Crystal: SKSpriteNode, Exchangable {
         self.position = location
     }
     
-    func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
+    func objectUpdatesMessage(_ attribute: String) -> [String : AnyObject] {
         if attribute == "initial" {
             return [
-                "uid": self.uid,
-                "x": self.position.x,
-                "y": self.position.y
+                "uid": self.uid as AnyObject,
+                "x": self.position.x as AnyObject,
+                "y": self.position.y as AnyObject
             ]
         } else {
             return [
-                "update": "location",
-                "object": "crystal",
-                "uid": self.uid,
-                "x": self.position.x,
-                "y": self.position.y
+                "update": "location" as AnyObject,
+                "object": "crystal" as AnyObject,
+                "uid": self.uid as AnyObject,
+                "x": self.position.x as AnyObject,
+                "y": self.position.y as AnyObject
             ]
         }
     }
     
-    static func createFromData(data: NSDictionary) -> Exchangable {
+    static func createFromData(_ data: NSDictionary) -> Exchangable {
         return Crystal(location: CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue)!),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue)!)
             ),
             uid: nil
         )
     }
     
-    static func regenerate(x: CGFloat, y: CGFloat, uid: Int) -> Crystal {
+    static func regenerate(_ x: CGFloat, y: CGFloat, uid: Int) -> Crystal {
         let pos = CGPoint(x: x, y: y)
         let crystal = Crystal(location: pos, uid: uid)
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            NSNotificationCenter.defaultCenter().postNotificationName("CrystalData", object: nil, userInfo: crystal.objectUpdatesMessage("position"))
+        DispatchQueue.main.async(execute: { () -> Void in
+            NotificationCenter.default.post(name: Notification.Name(rawValue: "CrystalData"), object: nil, userInfo: crystal.objectUpdatesMessage("position"))
         })
         return crystal
     }

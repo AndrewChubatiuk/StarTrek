@@ -20,11 +20,11 @@ class BrowserViewCell : UITableViewCell {
         super.awakeFromNib()
     }
     
-    override func setSelected(selected: Bool, animated: Bool) {
+    override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
     }
     
-    func loadItem(peerID: MCPeerID) {
+    func loadItem(_ peerID: MCPeerID) {
         self.peerID = peerID
         playerConnectionStatus.image = UIImage(named: "good.png")
         playerName.text = peerID.displayName

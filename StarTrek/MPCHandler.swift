@@ -11,8 +11,8 @@ import MultipeerConnectivity
 
 class MPCHandler: NSObject, MCSessionDelegate {
     
-    let peerID = MCPeerID(displayName: UIDevice.currentDevice().name)
-    private let serviceType = "star-trek"
+    let peerID = MCPeerID(displayName: UIDevice.current.name)
+    fileprivate let serviceType = "star-trek"
     let maxConnections = 4
     let serviceBrowser:MCNearbyServiceBrowser
     let serviceAdvertiser:MCNearbyServiceAdvertiser
@@ -35,47 +35,47 @@ class MPCHandler: NSObject, MCSessionDelegate {
         self.serviceBrowser.stopBrowsingForPeers()
     }
     
-    func session(session: MCSession, peer peerID: MCPeerID, didChangeState state: MCSessionState) {
+    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
         let userInfo = [
             "peerID": peerID,
             "state": state.rawValue
-        ]
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            NSNotificationCenter.defaultCenter().postNotificationName("MPC_DidChangeStateNotification", object: nil, userInfo: userInfo)
+        ] as [String : Any]
+        DispatchQueue.main.async(execute: { () -> Void in
+            NotificationCenter.default.post(name: Notification.Name(rawValue: "MPC_DidChangeStateNotification"), object: nil, userInfo: userInfo)
         })
         
     }
     
-    func session(session: MCSession, didReceiveData data: NSData, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
         let userInfo = [
             "data": data,
             "peerID": peerID
-        ]
-        dispatch_async(dispatch_get_main_queue(), { () -> Void in
-            NSNotificationCenter.defaultCenter().postNotificationName("MPC_DidReceiveDataNotification", object: nil, userInfo: userInfo)
+        ] as [String : Any]
+        DispatchQueue.main.async(execute: { () -> Void in
+            NotificationCenter.default.post(name: Notification.Name(rawValue: "MPC_DidReceiveDataNotification"), object: nil, userInfo: userInfo)
         })
         
     }
     
     
-    func session(session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, atURL localURL: NSURL, withError error: NSError?) {
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
     }
     
-    func session(session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, withProgress progress: NSProgress) {
+    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
     }
     
-    func session(session: MCSession, didReceiveStream stream: NSInputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
     }
 
 }
 
 extension MPCHandler : MCNearbyServiceAdvertiserDelegate {
     
-    func advertiser(advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: NSError) {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
         print("ERROR CANNOT ADVERTISE")
     }
     
-    func advertiser(advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: NSData?, invitationHandler: (Bool, MCSession) -> Void) {
+    func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         if session.connectedPeers.count < maxConnections {
             invitationHandler(true, self.session)
         } else {

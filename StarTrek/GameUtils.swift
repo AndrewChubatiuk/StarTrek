@@ -11,20 +11,20 @@ import SpriteKit
 
 class GameUtils {
     
-    static func generateRandomPointInWorld(worldSize: CGFloat) -> CGPoint {
+    static func generateRandomPointInWorld(_ worldSize: CGFloat) -> CGPoint {
         return CGPoint(
-            x: CGFloat(Float(arc4random())) % worldSize * 0.80 - worldSize * 0.4,
-            y: CGFloat(Float(arc4random())) % worldSize * 0.80 - worldSize * 0.4
+            x: CGFloat(Float(arc4random())).truncatingRemainder(dividingBy: worldSize) * 0.80 - worldSize * 0.4,
+            y: CGFloat(Float(arc4random())).truncatingRemainder(dividingBy: worldSize) * 0.80 - worldSize * 0.4
         )
     }
     
-    static func getCreatedShips(players: [Player]) -> [Spaceship] {
+    static func getCreatedShips(_ players: [Player]) -> [Spaceship] {
         return players.filter({$0.spaceship != nil}).map { player in
             return player.spaceship
         }
     }
     
-    static func generateGameMap(worldSize: CGFloat, players: [Player]) -> [Crystal] {
+    static func generateGameMap(_ worldSize: CGFloat, players: [Player]) -> [Crystal] {
         var crystals = [Crystal]()
         let minBaseDistance = Float(0.4 * worldSize)
         for player in players {

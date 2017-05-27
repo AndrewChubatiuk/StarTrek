@@ -10,13 +10,13 @@
 import Foundation
 
 @objc protocol Exchangable {
-    func objectUpdatesMessage(attribute: String) -> [String: AnyObject]
-    static func createFromData(data: NSDictionary) -> Exchangable
+    func objectUpdatesMessage(_ attribute: String) -> [String: AnyObject]
+    static func createFromData(_ data: NSDictionary) -> Exchangable
 }
 
 struct Message {
     
-    static func createMessageArray(objectArray: [Exchangable]) -> [[String: AnyObject]] {
+    static func createMessageArray(_ objectArray: [Exchangable]) -> [[String: AnyObject]] {
         var resultArray = [[String: AnyObject]]()
         for obj in objectArray {
             resultArray.append(obj.objectUpdatesMessage("initial"))
@@ -24,7 +24,7 @@ struct Message {
         return resultArray
     }
     
-    static func unpackMessageArray<T: Exchangable>(array: [T], data: NSArray) -> [T] {
+    static func unpackMessageArray<T: Exchangable>(_ array: [T], data: NSArray) -> [T] {
         var result = [T]()
         for d in data {
             let objDict = d as! NSDictionary

@@ -18,7 +18,7 @@ class Bar: SKSpriteNode {
     init(size: CGSize, color: UIColor, maxValue: Int) {
         self.maxWidth = size.width * 0.95
         self.maxValue = maxValue
-        super.init(texture: nil, color: UIColor.blackColor(), size: size)
+        super.init(texture: nil, color: UIColor.black, size: size)
         progressNode = SKSpriteNode(color: color, size: CGSize(width: maxWidth, height: self.size.height / 2))
         progressNode.anchorPoint = CGPoint(x: 0, y: 0.5)
         anchorPoint = CGPoint(x: 0, y: 0.5)
@@ -31,7 +31,7 @@ class Bar: SKSpriteNode {
         super.init(coder: aDecoder)
     }
     
-    func setBar(value: Int) {
+    func setBar(_ value: Int) {
         progressNode.size.width = maxWidth*CGFloat(value)/CGFloat(maxValue)
     }
 }

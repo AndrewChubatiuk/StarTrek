@@ -26,9 +26,9 @@ class SpaceshipView: UIViewController
         super.viewDidLoad()
         speciesShipImage.image = UIImage(named: speciesShipImageText)
         speciesInfo.text = speciesInfoText
-        speciesInfo.textColor = UIColor.yellowColor()
+        speciesInfo.textColor = UIColor.yellow
         speciesInfo.font = UIFont(name: "Starjedi", size: 9)
-        speciesInfo.textAlignment = NSTextAlignment.Justified
+        speciesInfo.textAlignment = NSTextAlignment.justified
         speciesName.text = speciesNameText
     }
     

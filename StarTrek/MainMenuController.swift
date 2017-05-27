@@ -11,7 +11,7 @@ import MultipeerConnectivity
 
 class MainMenuController: UIViewController {
     
-    @IBAction func exitGame(sender: AnyObject) {
+    @IBAction func exitGame(_ sender: AnyObject) {
         exit(0)
     }
     
@@ -19,8 +19,8 @@ class MainMenuController: UIViewController {
         super.viewDidLoad()
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        let appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
         let player = Player(
             peerID: appDelegate.mpcHandler.peerID.displayName
         )
@@ -31,15 +31,15 @@ class MainMenuController: UIViewController {
         }
     }
     
-    override func shouldAutorotate() -> Bool {
+    override var shouldAutorotate : Bool {
         return true
     }
 
-    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask {
-        if UIDevice.currentDevice().userInterfaceIdiom == .Phone {
-            return .AllButUpsideDown
+    override var supportedInterfaceOrientations : UIInterfaceOrientationMask {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            return .allButUpsideDown
         } else {
-            return .All
+            return .all
         }
     }
     
@@ -47,7 +47,7 @@ class MainMenuController: UIViewController {
         super.didReceiveMemoryWarning()
     }
 
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden : Bool {
         return true
     }
 }

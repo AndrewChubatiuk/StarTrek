@@ -22,24 +22,24 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
     {
         readFromPlist()
         super.viewDidLoad()
-        appDelegate = UIApplication.sharedApplication().delegate as! AppDelegate
-        pageViewController = UIPageViewController(transitionStyle: .Scroll, navigationOrientation: .Horizontal, options: nil)
+        appDelegate = UIApplication.shared.delegate as! AppDelegate
+        pageViewController = UIPageViewController(transitionStyle: .scroll, navigationOrientation: .horizontal, options: nil)
         pageViewController!.dataSource = self
         let startingViewController: SpaceshipView = viewControllerAtIndex(0)!
         let viewControllers = [startingViewController]
-        pageViewController!.setViewControllers(viewControllers , direction: .Forward, animated: false, completion: nil)
-        pageViewController!.view.frame = CGRectMake(pageView.frame.minX, 0, pageView.frame.width, pageView.frame.height);
+        pageViewController!.setViewControllers(viewControllers , direction: .forward, animated: false, completion: nil)
+        pageViewController!.view.frame = CGRect(x: pageView.frame.minX, y: 0, width: pageView.frame.width, height: pageView.frame.height);
         addChildViewController(pageViewController!)
         pageView.addSubview(pageViewController!.view)
-        pageViewController!.didMoveToParentViewController(self)
+        pageViewController!.didMove(toParentViewController: self)
     }
     
-    @IBAction func previousView(sender: UIButton) {
-        self.dismissViewControllerAnimated(true, completion: nil)
+    @IBAction func previousView(_ sender: UIButton) {
+        self.dismiss(animated: true, completion: nil)
     }
     
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        var destViewController: ConnectionsListController = segue.destinationViewController as! ConnectionsListController
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        var destViewController: ConnectionsListController = segue.destination as! ConnectionsListController
         self.appDelegate.getMyPlayer()!.setupSpecies(self.species[choice]["name"]!)
     }
     
@@ -50,20 +50,20 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
     
     func readFromPlist() {
         self.species = [[String:String]]()
-        let path = NSBundle.mainBundle().pathForResource("Species", ofType: "plist")
+        let path = Bundle.main.path(forResource: "Species", ofType: "plist")
         let species_array: Array<AnyObject> = (NSArray(contentsOfFile: path!)! as? Array<AnyObject>)!
         for specie_ns in species_array {
             let specie = specie_ns as! NSDictionary
             var specie_dict = [String:String]()
-            specie_dict.updateValue((specie.objectForKey("name") as? String)!, forKey: "name")
-            specie_dict.updateValue((specie.objectForKey("ship_image") as? String)!, forKey: "ship_image")
-            specie_dict.updateValue((specie.objectForKey("base_image") as? String)!, forKey: "base_image")
-            specie_dict.updateValue((specie.objectForKey("info") as? String)!, forKey: "info")
+            specie_dict.updateValue((specie.object(forKey: "name") as? String)!, forKey: "name")
+            specie_dict.updateValue((specie.object(forKey: "ship_image") as? String)!, forKey: "ship_image")
+            specie_dict.updateValue((specie.object(forKey: "base_image") as? String)!, forKey: "base_image")
+            specie_dict.updateValue((specie.object(forKey: "info") as? String)!, forKey: "info")
             self.species.append(specie_dict)
         }
     }
     
-    func pageViewController(pageViewController: UIPageViewController, viewControllerBeforeViewController viewController: UIViewController) -> UIViewController?
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController?
     {
         var index = (viewController as! SpaceshipView).pageIndex
         
@@ -76,7 +76,7 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
         return viewControllerAtIndex(index)
     }
     
-    func pageViewController(pageViewController: UIPageViewController, viewControllerAfterViewController viewController: UIViewController) -> UIViewController?
+    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController?
     {
         var index = (viewController as! SpaceshipView).pageIndex
         if index == NSNotFound {
@@ -89,13 +89,13 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
         return viewControllerAtIndex(index)
     }
     
-    func viewControllerAtIndex(index: Int) -> SpaceshipView?
+    func viewControllerAtIndex(_ index: Int) -> SpaceshipView?
     {
         if self.species.count == 0 || index >= self.species.count
         {
             return nil
         }
-        let pageContentViewController = storyboard!.instantiateViewControllerWithIdentifier("SpaceshipViewController") as! SpaceshipView
+        let pageContentViewController = storyboard!.instantiateViewController(withIdentifier: "SpaceshipViewController") as! SpaceshipView
         pageContentViewController.speciesShipImageText = species[index]["ship_image"]!
         pageContentViewController.speciesNameText = species[index]["name"]!
         pageContentViewController.speciesInfoText = species[index]["info"]!
@@ -105,12 +105,12 @@ class NewGameViewController: UIViewController, UIPageViewControllerDataSource
         return pageContentViewController
     }
     
-    func presentationCountForPageViewController(pageViewController: UIPageViewController) -> Int
+    func presentationCount(for pageViewController: UIPageViewController) -> Int
     {
         return self.species.count
     }
     
-    func presentationIndexForPageViewController(pageViewController: UIPageViewController) -> Int
+    func presentationIndex(for pageViewController: UIPageViewController) -> Int
     {
         return 0
     }

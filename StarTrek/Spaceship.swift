@@ -31,110 +31,110 @@ class Spaceship: SKSpriteNode, Exchangable {
     var label: SKLabelNode!
     var rocket: SKEmitterNode!
     
-    func updateObject(data: NSDictionary) {
-        if data.objectForKey("update")?.isEqualToString("shield") == true {
-            self.shield = data.objectForKey("shield")?.integerValue
-        } else if data.objectForKey("update")?.isEqualToString("energy") == true {
-            self.energy = data.objectForKey("energy")?.integerValue
-        } else if data.objectForKey("update")?.isEqualToString("alive") == true {
-            self.alive = data.objectForKey("alive")?.boolValue
+    func updateObject(_ data: NSDictionary) {
+        if (data.object(forKey: "update") as AnyObject).isEqual(to: "shield") == true {
+            self.shield = (data.object(forKey: "shield") as AnyObject).intValue
+        } else if (data.object(forKey: "update") as AnyObject).isEqual(to: "energy") == true {
+            self.energy = (data.object(forKey: "energy") as AnyObject).intValue
+        } else if (data.object(forKey: "update") as AnyObject).isEqual(to: "alive") == true {
+            self.alive = (data.object(forKey: "alive") as AnyObject).boolValue
             self.position = CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue!)),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue!))
             )
-        } else if data.objectForKey("update")?.isEqualToString("movement") == true {
+        } else if (data.object(forKey: "update") as AnyObject).isEqual(to: "movement") == true {
             let pos = CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue!)),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue!))
             )
-            let angle = CGFloat((data.objectForKey("angle")?.doubleValue!)!)
+            let angle = CGFloat(((data.object(forKey: "angle") as AnyObject).doubleValue!))
             self.spaceshipImage.zRotation = angle
             self.rocket.targetNode = self.scene
             rocket.emissionAngle = angle + 3 * 3.14 / 2
-            self.runAction(SKAction.moveTo(
-                pos,
+            self.run(SKAction.move(
+                to: pos,
                 duration: 0.1
             ))
         }
     }
     
-    func move(angle: CGFloat, velocity: CGPoint) {
+    func move(_ angle: CGFloat, velocity: CGPoint) {
         self.spaceshipImage.zRotation = angle
         rocket.emissionAngle = angle + 3 * 3.14 / 2
-        let shipAction = SKAction.moveBy(
-            CGVector(dx: velocity.x, dy: velocity.y),
+        let shipAction = SKAction.move(
+            by: CGVector(dx: velocity.x, dy: velocity.y),
             duration: 0.2
         )
         self.rocket.targetNode = self.scene
-        self.runAction(shipAction)
+        self.run(shipAction)
         rocket.particleSpeed = 100 * CGFloat(hypotf(Float(velocity.x), Float(velocity.y)))
         if generateMessages == true {
             if self.sending == false {
                 self.sending = true
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("movement"))
+                DispatchQueue.main.async(execute: { () -> Void in
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("movement"))
                 })
-                NSTimer.scheduledTimerWithTimeInterval(0.01, target: self, selector: #selector(Spaceship.enableSending), userInfo: nil, repeats: false)
+                Timer.scheduledTimer(timeInterval: 0.01, target: self, selector: #selector(Spaceship.enableSending), userInfo: nil, repeats: false)
             }
         }
     }
     
-    func objectUpdatesMessage(attribute: String) -> [String : AnyObject] {
+    func objectUpdatesMessage(_ attribute: String) -> [String : AnyObject] {
         if attribute == "initial" {
             return [
-                "x": self.position.x,
-                "y": self.position.y
+                "x": self.position.x as AnyObject,
+                "y": self.position.y as AnyObject
             ]
         } else if attribute == "shield" {
             return [
-                "update": "shield",
-                "object": "spaceship",
-                "shield": self.shield
+                "update": "shield" as AnyObject,
+                "object": "spaceship" as AnyObject,
+                "shield": self.shield as AnyObject
             ]
         } else if attribute == "energy" {
             return [
-                "update": "energy",
-                "object": "spaceship",
-                "energy": self.energy,
+                "update": "energy" as AnyObject,
+                "object": "spaceship" as AnyObject,
+                "energy": self.energy as AnyObject,
             ]
         } else if attribute == "alive" {
             if generateMessages == true {
                 return [
-                    "update": "alive",
-                    "x": self.position.x,
-                    "y": self.position.y,
-                    "object": "spaceship",
-                    "alive": self.alive
+                    "update": "alive" as AnyObject,
+                    "x": self.position.x as AnyObject,
+                    "y": self.position.y as AnyObject,
+                    "object": "spaceship" as AnyObject,
+                    "alive": self.alive as AnyObject
                 ]
             } else {
                 return [
-                    "update": "alive",
-                    "x": self.position.x,
-                    "y": self.position.y,
-                    "object": "spaceship",
-                    "ownerID": self.ownerID,
-                    "alive": self.alive
+                    "update": "alive" as AnyObject,
+                    "x": self.position.x as AnyObject,
+                    "y": self.position.y as AnyObject,
+                    "object": "spaceship" as AnyObject,
+                    "ownerID": self.ownerID as AnyObject,
+                    "alive": self.alive as AnyObject
                 ]
             }
         } else {
             return [
-                "update": "movement",
-                "object": "spaceship",
-                "angle": self.spaceshipImage.zRotation,
-                "x": self.position.x,
-                "y": self.position.y
+                "update": "movement" as AnyObject,
+                "object": "spaceship" as AnyObject,
+                "angle": self.spaceshipImage.zRotation as AnyObject,
+                "x": self.position.x as AnyObject,
+                "y": self.position.y as AnyObject
             ]
         }
     }
     
-    static func createFromData(data: NSDictionary) -> Exchangable {
+    static func createFromData(_ data: NSDictionary) -> Exchangable {
         return Spaceship(
             location: CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue!)),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue!))
             ),
-            species: data.objectForKey("species") as! String,
-            ownerID: data.objectForKey("ownerID") as! String
+            species: data.object(forKey: "species") as! String,
+            ownerID: data.object(forKey: "ownerID") as! String
         )
     }
     
@@ -155,23 +155,23 @@ class Spaceship: SKSpriteNode, Exchangable {
         self.species = species
         let texture = SKTexture(imageNamed: species + "_ship")
         self.ownerID = ownerID
-        super.init(texture: nil, color: UIColor.clearColor(), size: texture.size())
+        super.init(texture: nil, color: UIColor.clear, size: texture.size())
         self.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        spaceshipImage = SKSpriteNode(texture: texture, color: UIColor.clearColor(), size: texture.size())
+        spaceshipImage = SKSpriteNode(texture: texture, color: UIColor.clear, size: texture.size())
         self.addChild(spaceshipImage)
         self.physicsBody = SKPhysicsBody(circleOfRadius: size.width > size.height ? size.width / 2 : size.height / 2)   //  y(texture: texture, size: size)
         self.physicsBody?.allowsRotation = false
         self.physicsBody?.categoryBitMask = CollisionGroups.Spaceship
         self.physicsBody?.contactTestBitMask = CollisionGroups.Spacebase | CollisionGroups.Crystal | CollisionGroups.Bullet | CollisionGroups.Spaceship
         self.physicsBody?.collisionBitMask = CollisionGroups.Border
-        self.physicsBody?.dynamic = true
+        self.physicsBody?.isDynamic = true
         self.physicsBody?.usesPreciseCollisionDetection = true
         self.position = location
-        shieldBar = Bar(size: CGSize(width: 100, height: 12), color: UIColor.blueColor(), maxValue: maxShield)
+        shieldBar = Bar(size: CGSize(width: 100, height: 12), color: UIColor.blue, maxValue: maxShield)
         shieldBar.setBar(shield)
         shieldBar.position = CGPoint(x: -shieldBar.size.width/2, y: self.size.height/2)
         addChild(shieldBar)
-        energyBar = Bar(size: CGSize(width: 100, height: 12), color: UIColor.orangeColor(), maxValue: maxEnergy)
+        energyBar = Bar(size: CGSize(width: 100, height: 12), color: UIColor.orange, maxValue: maxEnergy)
         energyBar.setBar(energy)
         energyBar.position = CGPoint(x: -shieldBar.size.width/2, y: self.size.height/2 + shieldBar.size.height)
         addChild(energyBar)
@@ -193,7 +193,7 @@ class Spaceship: SKSpriteNode, Exchangable {
         shieldImage.zPosition = spaceshipImage.zPosition + 1
     }
     
-    func pickCrystal(crystal: Crystal) {
+    func pickCrystal(_ crystal: Crystal) {
         if energy < maxEnergy {
             if (maxEnergy > (crystal.energy + energy)) {
                 self.energy = self.energy + crystal.energy
@@ -202,15 +202,15 @@ class Spaceship: SKSpriteNode, Exchangable {
                 self.energy = maxEnergy
             }
             if generateMessages == true {
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("energy"))
+                DispatchQueue.main.async(execute: { () -> Void in
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("energy"))
                 })
             }
         }
         energyBar.setBar(energy)
     }
     
-    func getShield(shield: Int) {
+    func getShield(_ shield: Int) {
         if self.shield < maxShield {
             if (maxShield > (shield + self.shield)) {
                 self.shield = self.shield + shield
@@ -219,28 +219,28 @@ class Spaceship: SKSpriteNode, Exchangable {
             }
             shieldBar.setBar(energy)
             if generateMessages == true {
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("shield"))
+                DispatchQueue.main.async(execute: { () -> Void in
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("shield"))
                 })
             }
         }
     }
     
-    func getDamage(bullet: Bullet) {
+    func getDamage(_ bullet: Bullet) {
         if shield > bullet.damage {
             shield = shield - bullet.damage
         } else {
             if shield > 0 {
                 shield = 0
-                shieldImage.hidden = true
+                shieldImage.isHidden = true
             } else {
                 die()
             }
         }
         shieldBar.setBar(shield)
         if generateMessages == true {
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("shield"))
+            DispatchQueue.main.async(execute: { () -> Void in
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("shield"))
             })
         }
     }
@@ -248,8 +248,8 @@ class Spaceship: SKSpriteNode, Exchangable {
     func die() {
         if alive == true {
             self.alive = false
-            dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("alive"))
+            DispatchQueue.main.async(execute: { () -> Void in
+                NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("alive"))
             })
         }
     }
@@ -272,10 +272,10 @@ class Spaceship: SKSpriteNode, Exchangable {
             energy = energy - shotEnergyConsumption
             if generateMessages == true {
                 self.reloading = true
-                dispatch_async(dispatch_get_main_queue(), { () -> Void in
-                    NSNotificationCenter.defaultCenter().postNotificationName("SpaceshipData", object: nil, userInfo: self.objectUpdatesMessage("energy"))
+                DispatchQueue.main.async(execute: { () -> Void in
+                    NotificationCenter.default.post(name: Notification.Name(rawValue: "SpaceshipData"), object: nil, userInfo: self.objectUpdatesMessage("energy"))
                 })
-                NSTimer.scheduledTimerWithTimeInterval(0.5, target: self, selector: #selector(Spaceship.enableFire), userInfo: nil, repeats: false)
+                Timer.scheduledTimer(timeInterval: 0.5, target: self, selector: #selector(Spaceship.enableFire), userInfo: nil, repeats: false)
             }
         }
         energyBar.setBar(energy)

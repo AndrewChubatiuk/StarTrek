@@ -37,12 +37,12 @@ class Player : NSObject, Exchangable {
         self.server = true
     }
     
-    func setupSpecies(species: String) {
+    func setupSpecies(_ species: String) {
         self.species = species
         self.status = PlayerStatus.Ready
     }
     
-    func createSpaceship(location: CGPoint) {
+    func createSpaceship(_ location: CGPoint) {
         self.spaceship = Spaceship(location: location, species: species, ownerID: peerID)
         self.spacebase = Spacebase(location: location, species: species, ownerID: peerID)
     }
@@ -70,34 +70,34 @@ class Player : NSObject, Exchangable {
         }
     }
     
-    func objectUpdatesMessage(attribute: String) -> [String: AnyObject] {
+    func objectUpdatesMessage(_ attribute: String) -> [String: AnyObject] {
         if attribute == "initial" {
             return [
-                "peerID": peerID,
-                "status": status,
-                "species": species,
-                "x": spaceship.position.x,
-                "y": spaceship.position.y
+                "peerID": peerID as AnyObject,
+                "status": status as AnyObject,
+                "species": species as AnyObject,
+                "x": spaceship.position.x as AnyObject,
+                "y": spaceship.position.y as AnyObject
             ]
         } else {
             return [
-                "peerID": peerID,
-                "status": status,
-                "species": species,
-                "x": spaceship.position.x,
-                "y": spaceship.position.y
+                "peerID": peerID as AnyObject,
+                "status": status as AnyObject,
+                "species": species as AnyObject,
+                "x": spaceship.position.x as AnyObject,
+                "y": spaceship.position.y as AnyObject
             ]
         }
     }
     
-    static func createFromData(data: NSDictionary) -> Exchangable {
-        let player = Player(peerID: data.objectForKey("peerID") as! String)
-        player.setupSpecies(data.objectForKey("species") as! String)
-        player.status = data.objectForKey("status")?.integerValue
+    static func createFromData(_ data: NSDictionary) -> Exchangable {
+        let player = Player(peerID: data.object(forKey: "peerID") as! String)
+        player.setupSpecies(data.object(forKey: "species") as! String)
+        player.status = (data.object(forKey: "status") as AnyObject).intValue
         player.createSpaceship(
             CGPoint(
-                x: CGFloat((data.objectForKey("x")?.doubleValue!)!),
-                y: CGFloat((data.objectForKey("y")?.doubleValue!)!)
+                x: CGFloat(((data.object(forKey: "x") as AnyObject).doubleValue!)),
+                y: CGFloat(((data.object(forKey: "y") as AnyObject).doubleValue!))
             )
         )
         return player
